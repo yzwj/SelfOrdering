@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28315.86
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}") = "cobra-mobile", "cobra-mobile.njsproj", "{055B2658-FE10-4287-9100-03A93D01E584}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{055B2658-FE10-4287-9100-03A93D01E584}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{055B2658-FE10-4287-9100-03A93D01E584}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{055B2658-FE10-4287-9100-03A93D01E584}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{055B2658-FE10-4287-9100-03A93D01E584}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {1DD3757B-F027-4B49-89CA-55610E02087F}
+	EndGlobalSection
+EndGlobal
