@@ -2,11 +2,15 @@
 #include "yoda_self_ordering.h"
 #include "PaymentView.h"
 #include "CashPop.h"
+#include "QRCodeDlg.h"
+//#include "FileUtils.h"
 #ifdef _DEBUG
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #define new DEBUG_NEW
 #endif
+int gCurSerialNO;
+//FileSession *gpFileSession = NULL;
 extern 	CList<LPORDERINFO, LPORDERINFO>	glstOrder;
 #define TIMER_REDRAW					1001
 #define ID_TEXT_TOTAL					160
@@ -77,6 +81,7 @@ void CPayContainerCtrl::SetImage(UINT nID, CString szImagePath)
 	ASSERT_VALID(pImage);
 	pImage->SetImage(CBCGPImage(szImagePath), CBCGPSize(pImage->GetRect().Width(), pImage->GetRect().Height()));
 }
+
 void CPayContainerCtrl::SetImage(UINT nID, UINT nImageID)
 {
 	CBCGPVisualContainer* pContainer = GetVisualContainer();
@@ -114,7 +119,43 @@ void CPayContainerCtrl::SetTextInfo(UINT nID, CString szText)
 	pText->SetText(szText);
 	pText->Redraw();
 }
-
+DWORD WINAPI RECEIPT_THREAD(LPVOID lpParam)
+{
+	CPayContainerCtrl * pThis = (CPayContainerCtrl*)lpParam;
+	while(1)
+	{
+		if (PrintReceipt(true))
+		{
+			glstOrder.RemoveAll();
+			break;
+		}
+		else
+			Sleep(1000);
+	}
+	return 1;
+}
+BOOL CPayContainerCtrl::SaveOrder(ORDERSTATUS orderStatus)
+{
+	gCurSerialNO = getnewFreeID(gpDB, _T("y_order_list"), _T("OrderID"));
+	CString szSQL;
+	int nIndex = 1;
+	for (POSITION pos = glstOrder.GetHeadPosition(); pos != NULL;)
+	{
+		LPORDERINFO info = glstOrder.GetNext(pos);
+		if (info != NULL)
+		{
+			for (int i = 0; i < info->nProductCounts; i++)
+			{
+				szSQL.Format(_T("insert into y_order_list(OrderID,ItemIndex,ProductName,Size,Ice,SugarLevel,HoneyLevel,Topping,OrderDate,OrderTime,OrderStatus) VALUES(%d,%d,'%s %s','%s','%s','%s','%s','%s',CURDATE(),CURTIME(),%d)"),
+					gCurSerialNO, nIndex,info->productInfo.szProductName, info->productInfo.szProductNameCN, info->productInfo.szSize, info->productInfo.szICE, info->productInfo.bShowSugarLevel ? info->productInfo.szSugar : L"", info->productInfo.bShowHoneyLevel ? info->productInfo.szHoney : L"",
+					info->productInfo.szTopping, orderStatus);
+				gpDB->Execute(szSQL);
+				nIndex++;
+			}
+		}
+	}
+	return TRUE;
+}
 BOOL CPayContainerCtrl::OnMouseDown(int nButton, const CBCGPPoint& pt)
 {
 	USES_CONVERSION;
@@ -126,6 +167,16 @@ BOOL CPayContainerCtrl::OnMouseDown(int nButton, const CBCGPPoint& pt)
 		CBCGPImageGaugeImpl* pImage = DYNAMIC_DOWNCAST(CBCGPImageGaugeImpl, pObject);
 		if (pImage != NULL && pImage->GetID() == ID_IMAGE_IPAY)
 		{
+			if (SaveOrder(ORDER_COUNTER))
+			{
+				CString szText;
+				szText.Format(L"%d", gCurSerialNO);
+				if (GenerateQRCode(szText))
+				{
+					CQRCodeDlg dlg(this);
+					dlg.DoModal();
+				}
+			}
 			
 		}
 		else if (pImage != NULL && pImage->GetID() == ID_IMAGE_NETS)
@@ -134,34 +185,34 @@ BOOL CPayContainerCtrl::OnMouseDown(int nButton, const CBCGPPoint& pt)
 		}
 		else if (pImage != NULL && pImage->GetID() == ID_IMAGE_COUNTER)
 		{
-			PrintReceipt(true);
-			glstOrder.RemoveAll();
-			CBCGPPopupWindow* pPopup = new CBCGPPopupWindow;
-			CBCGPPopupWindowColors customColors;
-
-			customColors.clrFill = RGB(103, 109, 134);
-			customColors.clrText = RGB(255, 255, 255);
-			customColors.clrBorder = RGB(103, 109, 134);
-			customColors.clrLink = RGB(0, 255, 0);
-			customColors.clrHoverLink = RGB(254, 233, 148);
-
-			pPopup->SetCustomTheme(customColors);
-			pPopup->SetAnimationType(
-			CBCGPPopupMenu::SYSTEM_DEFAULT_ANIMATION);
-			pPopup->SetTransparency((BYTE)255);
-			pPopup->SetSmallCaption(FALSE);
-			pPopup->SetSmallCaptionGripper(FALSE);
-			pPopup->SetAutoCloseTime(5000);
-			pPopup->SetRoundedCorners();
-			pPopup->SetShadow();
-			pPopup->EnablePinButton(FALSE);
-			CPoint ptLocation(-1, -1);
-			ptLocation.x = GetSystemMetrics(SM_CYSCREEN)/2;
-			ptLocation.y = GetSystemMetrics(SM_CXSCREEN)/2;
-			pPopup->EnableCloseButton(FALSE);
-			pPopup->Create(this, IDD_CASH_POP,
-			NULL, ptLocation, RUNTIME_CLASS(CCashPop));
-			pPopup->CenterWindow();
+			if (SaveOrder(ORDER_COUNTER))
+			{
+				CBCGPPopupWindow* pPopup = new CBCGPPopupWindow;
+				CBCGPPopupWindowColors customColors;
+				customColors.clrFill = RGB(103, 109, 134);
+				customColors.clrText = RGB(255, 255, 255);
+				customColors.clrBorder = RGB(103, 109, 134);
+				customColors.clrLink = RGB(0, 255, 0);
+				customColors.clrHoverLink = RGB(254, 233, 148);
+				pPopup->SetCustomTheme(customColors);
+				pPopup->SetAnimationType(
+					CBCGPPopupMenu::SYSTEM_DEFAULT_ANIMATION);
+				pPopup->SetTransparency((BYTE)255);
+				pPopup->SetSmallCaption(FALSE);
+				pPopup->SetSmallCaptionGripper(FALSE);
+				pPopup->SetAutoCloseTime(5000);
+				pPopup->SetRoundedCorners();
+				pPopup->SetShadow();
+				pPopup->EnablePinButton(FALSE);
+				CPoint ptLocation(-1, -1);
+				ptLocation.x = GetSystemMetrics(SM_CYSCREEN) / 2;
+				ptLocation.y = GetSystemMetrics(SM_CXSCREEN) / 2;
+				pPopup->EnableCloseButton(FALSE);
+				pPopup->Create(this, IDD_CASH_POP,
+					NULL, ptLocation, RUNTIME_CLASS(CCashPop));
+				pPopup->CenterWindow();
+				CreateThread(NULL, 0, RECEIPT_THREAD, this, 0, NULL);
+			}
 		}
 	}
 	return FALSE;

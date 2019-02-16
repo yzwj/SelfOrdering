@@ -4,6 +4,10 @@
 //
 #define IDP_OLE_INIT_FAILED             100
 #define IDS_MAIN_TOOLBAR                101
+#define IDS_TOTAL_CUPS                  102
+#define IDS_TOTAL_MONEY                 103
+#define IDS_TIP_MAX_TOPPING             104
+#define IDS_QRCODE_DESC                 105
 #define IDR_MAINFRAME                   128
 #define IDB_AIYU                        166
 #define IDB_ALEO_VERA                   167
@@ -61,12 +65,17 @@
 #define IDB_CHINESE                     234
 #define IDB_PNG8                        235
 #define IDB_ENGLISH                     235
+#define IDD_DIALOG2                     237
+#define IDD_DIALOG_NOTICE               237
+#define IDD_DIALOG3                     239
+#define IDD_SHOW_QRCODE                 239
 #define IDC_BUTTON_HOME                 1054
 #define IDC_STATIC_TIP1                 1055
 #define IDC_STATIC_TIP2                 1056
 #define IDC_STATIC_TIP3                 1057
 #define IDC_EDIT1                       1058
 #define IDC_EDIT2                       1059
+#define IDC_STATIC_DESC                 1059
 #define IDC_EDIT3                       1060
 #define ID_VIEW_CUSTOMIZE               32770
 #define ID_VIEW_TOOLBARS                32771
@@ -90,9 +99,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        236
+#define _APS_NEXT_RESOURCE_VALUE        241
 #define _APS_NEXT_COMMAND_VALUE         32869
-#define _APS_NEXT_CONTROL_VALUE         1059
+#define _APS_NEXT_CONTROL_VALUE         1060
 #define _APS_NEXT_SYMED_VALUE           117
 #endif
 #endif

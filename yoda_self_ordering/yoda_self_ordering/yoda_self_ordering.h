@@ -115,6 +115,13 @@ typedef struct HeaderOrderInfo
 	int             nProductCounts;
 	BOOL			bEdit;
 }ORDERINFO, *LPORDERINFO;
+enum ORDERSTATUS {
+	ORDER_INIT      = 0,
+	ORDER_COUNTER   = 1,
+	ORDER_PAID      = 2, 
+	ORDER_WORKING   = 3,
+	ORDER_COMPLETED = 4
+};
 class Cyoda_self_orderingApp : public CBCGPWinApp
 {
 public:
@@ -136,3 +143,8 @@ public:
 
 extern Cyoda_self_orderingApp theApp;
 BOOL PrintReceipt(bool bCounter);
+long getFreeID(CAdoConnection *pDB, const CString szTable);
+long getnewFreeID(CAdoConnection *pDB, const CString szTable, CString sColName);
+int	IsHaveSameID(CAdoConnection *pDB, CString sColName, CString sTableName, CString szValue);
+bool execSQL(CAdoConnection *pDB, CString &szSQL);
+BOOL GenerateQRCode(CString szText);

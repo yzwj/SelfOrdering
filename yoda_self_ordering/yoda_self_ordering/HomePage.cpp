@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "yoda_self_ordering.h"
 #include "HomePage.h"
 #ifdef _DEBUG
@@ -6,6 +6,8 @@
 static char THIS_FILE[] = __FILE__;
 #define new DEBUG_NEW
 #endif
+#include "TipInfo.h"
+
 BOOL gbChinese;
 #define ID_IMAGE_ADVERTISING			160
 #define ID_IMAGE_LANGUAGE				161
@@ -38,7 +40,7 @@ int CHomeContainerCtrl::OnCreate(LPCREATESTRUCT lpCreateStruct)
 void CHomeContainerCtrl::InitImage()
 {
 	SetImage(ID_IMAGE_ADVERTISING, L"C:\\Advertising.png");
-	SetImage(ID_IMAGE_LANGUAGE, IDB_CHINESE);
+	SetImage(ID_IMAGE_LANGUAGE, !gbChinese ? IDB_CHINESE : IDB_ENGLISH);
 	SetImage(ID_IMAGE_ORDER, IDB_HOME_ORDER);
 	SetImage(ID_IMAGE_MEMBER, IDB_HOME_CARD);
 	CBCGPVisualContainer* pContainer = GetVisualContainer();
@@ -60,6 +62,7 @@ void CHomeContainerCtrl::SetImage(UINT nID, UINT nImageID)
 	CBCGPVisualContainer* pContainer = GetVisualContainer();
 	ASSERT_VALID(pContainer);
 	CBCGPImageGaugeImpl* pImage = DYNAMIC_DOWNCAST(CBCGPImageGaugeImpl, pContainer->GetByID(nID));
+	
 	ASSERT_VALID(pImage);
 	pImage->SetImage(CBCGPImage(nImageID), CBCGPSize(pImage->GetRect().Width(), pImage->GetRect().Height()));
 	pImage->SetRoundedShapes();
@@ -81,20 +84,21 @@ BOOL CHomeContainerCtrl::OnMouseDown(int nButton, const CBCGPPoint& pt)
 		{
 			if (pImage->GetID() == ID_IMAGE_LANGUAGE)
 			{
-				gbChinese = TRUE;
-				::PostMessage(AfxGetMainWnd()->m_hWnd, WM_CLICK_HOME, 0, 0);
+				gbChinese = !gbChinese;
+				SetImage(ID_IMAGE_LANGUAGE, !gbChinese ? IDB_CHINESE:IDB_ENGLISH);
+				SetImage(ID_IMAGE_ORDER, gbChinese ? IDB_HOME_ORDER: IDB_HOME_ORDER);
+				SetImage(ID_IMAGE_MEMBER, gbChinese?IDB_HOME_CARD: IDB_HOME_CARD);
 			}
 			else if (pImage->GetID() == ID_IMAGE_MEMBER)
 			{
-
+				//CTipInfo::c_pTip->ShowFloatWindow(this);
+				//::PostMessage(AfxGetMainWnd()->m_hWnd, ID_SHOWTOOLTIP, IDS_TIP_MAX_TOPPING, 0);
 			}
 			else if (pImage->GetID() == ID_IMAGE_ORDER)
 			{
+				::PostMessage(AfxGetMainWnd()->m_hWnd, WM_CLICK_HOME, 0, 0);
 			}
-			::PostMessage(AfxGetMainWnd()->m_hWnd, WM_CLICK_HOME, 0, 0);
-
 		}
-		
 	}
 	return FALSE;
 }

@@ -7,9 +7,11 @@
 
 #include "yoda_self_orderingDoc.h"
 #include "yoda_self_orderingView.h"
+#include "qrencode.h"
 #include "printerlibs.h"
 #pragma comment(lib,"printerlibs.lib")
 extern 	CList<LPORDERINFO, LPORDERINFO>	glstOrder;
+extern  int gCurSerialNO;
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
@@ -264,6 +266,7 @@ void EnumUsbToComboBox()
 }
 BOOL PrintReceipt(bool bCounter)
 {
+	bool bSuccess = false;
 	EnumUsbToComboBox();
 	int h = Port_OpenUsb(gDeviceID);
 	if (h) 
@@ -315,7 +318,9 @@ BOOL PrintReceipt(bool bCounter)
 			POS_TextOut(h, L"", 150, 1, 1, 0, 0x08, ENCODING_UTF8);
 			//wsprintfW(sBuf, L"%.2f\n", 2.8);
 			POS_TextOut(h, L"\n", -2, 0, 0, 0, 0, ENCODING_UTF8);
-			POS_SetBarcode(h, "No.123456", -2, 2, 50, 0, 2, POS_BARCODE_TYPE_CODE128);
+			szInfo.Format(L"%d", gCurSerialNO);
+			//POS_SetBarcode(h, szInfo, -2, 2, 50, 0, 2, POS_BARCODE_TYPE_CODE128);
+			POS_SetQRCode(h, W2A(szInfo), 0, 10, 0, 2);
 			POS_TextOut(h, L"\n", -2, 0, 0, 0, 0, ENCODING_UTF8);
 			POS_TextOut(h, L"Your Order has been Sent to the Counter.\n", -2, 0, 0, 0, 0, ENCODING_UTF8);
 			POS_TextOut(h, L"Thank You.", -2, 0, 0, 0, 0, ENCODING_UTF8);
@@ -327,8 +332,284 @@ BOOL PrintReceipt(bool bCounter)
 		POS_FeedAndCutPaper(h);
 		POS_KickOutDrawer(h, 0, 100, 100);
 		POS_Beep(h, 1, 5);
-		bool bSuccess = POS_TicketSucceed(h, 0, 1000);
+		bSuccess = POS_TicketSucceed(h, 0, 1000);
 		Port_Close(h);
 	}
+	return bSuccess;
+}
+#define OUT_FILE_PIXEL_PRESCALER	8											// Prescaler (number of pixels in bmp file for each QRCode pixel, on each dimension)
+#define PIXEL_COLOR_R				0											// Color of bmp pixels
+#define PIXEL_COLOR_G				0
+#define PIXEL_COLOR_B				0
+BOOL GenerateQRCode(CString szText)
+{
+	USES_CONVERSION;
+	char*			szSourceSring = W2A(szText);
+	unsigned int	unWidth, x, y, l, n, unWidthAdjusted, unDataBytes;
+	unsigned char*	pRGBData, *pSourceData, *pDestData;
+	QRcode*			pQRC;
+	FILE*			f;
+	/*
+	* Create a symbol from the string. The library automatically parses the input
+	* string and encodes in a QR Code symbol.
+	* @warning This function is THREAD UNSAFE when pthread is disabled.
+	* @param string input string. It must be NUL terminated.
+	* @param version version of the symbol. If 0, the library chooses the minimum
+	*                version for the given input data.
+	* @param level error correction level.
+	* @param hint tell the library how non-alphanumerical characters should be
+	*             encoded. If QR_MODE_KANJI is given, kanji characters will be
+	*             encoded as Shif-JIS characters. If QR_MODE_8 is given, all of
+	*             non-alphanumerical characters will be encoded as is. If you want
+	*             to embed UTF-8 string, choose this.
+	* @param casesensitive case-sensitive(1) or not(0).
+	* @return an instance of QRcode class. The version of the result QRcode may
+	*         be larger than the designated version. On error, NULL is returned,
+	*         and errno is set to indicate the error. See Exceptions for the
+	*         details.
+	* @throw EINVAL invalid input object.
+	* @throw ENOMEM unable to allocate memory for input objects.
+	* @throw ERANGE input data is too large.
+	*/
+
+	// Compute QRCode
+
+	if (pQRC = QRcode_encodeString(szSourceSring, 0, QR_ECLEVEL_H, QR_MODE_8, 1))
+	{
+		unWidth = pQRC->width;
+		unWidthAdjusted = unWidth * OUT_FILE_PIXEL_PRESCALER * 3;
+		if (unWidthAdjusted % 4)
+			unWidthAdjusted = (unWidthAdjusted / 4 + 1) * 4;
+		unDataBytes = unWidthAdjusted * unWidth * OUT_FILE_PIXEL_PRESCALER;
+
+		// Allocate pixels buffer
+
+		if (!(pRGBData = (unsigned char*)malloc(unDataBytes)))
+		{
+			return false;
+		}
+		// Preset to white
+		memset(pRGBData, 0xff, unDataBytes);
+		// Prepare bmp headers
+		BITMAPFILEHEADER kFileHeader;
+		kFileHeader.bfType = 0x4d42;  // "BM"
+		kFileHeader.bfSize = sizeof(BITMAPFILEHEADER) +
+			sizeof(BITMAPINFOHEADER) +
+			unDataBytes;
+		kFileHeader.bfReserved1 = 0;
+		kFileHeader.bfReserved2 = 0;
+		kFileHeader.bfOffBits = sizeof(BITMAPFILEHEADER) +
+			sizeof(BITMAPINFOHEADER);
+
+		BITMAPINFOHEADER kInfoHeader;
+		kInfoHeader.biSize = sizeof(BITMAPINFOHEADER);
+		kInfoHeader.biWidth = unWidth * OUT_FILE_PIXEL_PRESCALER;
+		kInfoHeader.biHeight = -((int)unWidth * OUT_FILE_PIXEL_PRESCALER);
+		kInfoHeader.biPlanes = 1;
+		kInfoHeader.biBitCount = 24;
+		kInfoHeader.biCompression = BI_RGB;
+		kInfoHeader.biSizeImage = 0;
+		kInfoHeader.biXPelsPerMeter = 0;
+		kInfoHeader.biYPelsPerMeter = 0;
+		kInfoHeader.biClrUsed = 0;
+		kInfoHeader.biClrImportant = 0;
+		//
+		// Convert QrCode bits to bmp pixels
+
+		pSourceData = pQRC->data;
+		for (y = 0; y < unWidth; y++)
+		{
+			pDestData = pRGBData + unWidthAdjusted * y * OUT_FILE_PIXEL_PRESCALER;
+			for (x = 0; x < unWidth; x++)
+			{
+				if (*pSourceData & 1)
+				{
+					for (l = 0; l < OUT_FILE_PIXEL_PRESCALER; l++)
+					{
+						for (n = 0; n < OUT_FILE_PIXEL_PRESCALER; n++)
+						{
+							*(pDestData + n * 3 + unWidthAdjusted * l) = PIXEL_COLOR_B;
+							*(pDestData + 1 + n * 3 + unWidthAdjusted * l) = PIXEL_COLOR_G;
+							*(pDestData + 2 + n * 3 + unWidthAdjusted * l) = PIXEL_COLOR_R;
+						}
+					}
+				}
+				pDestData += 3 * OUT_FILE_PIXEL_PRESCALER;
+				pSourceData++;
+			}
+		}
+		// Output the bmp file
+		if (!(fopen_s(&f, "d:\\QRCode.bmp", "wb")))
+		{
+			fwrite(&kFileHeader, sizeof(BITMAPFILEHEADER), 1, f);
+			fwrite(&kInfoHeader, sizeof(BITMAPINFOHEADER), 1, f);
+			fwrite(pRGBData, sizeof(unsigned char), unDataBytes, f);
+			fclose(f);
+		}
+		else
+		{
+			return false;
+		}
+		// Free data
+		free(pRGBData);
+		QRcode_free(pQRC);
+	}
+	else
+	{
+		return false;
+	}
 	return true;
+}
+
+long getnewFreeID(CAdoConnection *pDB, const CString szTable, CString sColName)
+{
+	int nID = getFreeID(pDB, szTable);
+	if (nID<1)
+		return -1;
+	CString szID;
+	szID.Format(L"%d", nID);
+	BOOL bHaveSame = IsHaveSameID(pDB, sColName, szTable, szID);
+	while (bHaveSame)
+	{
+		nID = getFreeID(pDB, szTable);
+		if (nID<1)
+			return -1;
+		szID.Format(L"%d", nID);
+		bHaveSame = IsHaveSameID(pDB, sColName, szTable, szID);
+	}
+	return nID;
+}
+int	IsHaveSameID(CAdoConnection *pDB, CString sColName, CString sTableName, CString szValue)
+{
+	CAdoRecordSet recordset;
+	recordset.SetAdoConnection(pDB);
+	recordset.SetCursorLocation();
+	CString sSQL, sTemp;
+	sSQL = _T("select " + sColName + " from " + sTableName + " where " + sColName + " = " + szValue);//
+	int nID = 0;
+	try {
+		if (!recordset.Open(sSQL))
+			return 0;
+		short nCol = 0;
+	}
+
+	catch (...) {
+		if (recordset.IsOpen())
+			recordset.Close();
+		return 0;
+	}
+
+	if (recordset.GetRecordCount() == 0) {
+		recordset.Close();
+		return 0;
+	}
+
+	recordset.Close();
+	return 1;
+}
+
+BOOL AddLog(CAdoConnection *pDB, CString szAction, CString szStr, const CString&szUserTitle)
+{
+	CString szUser, szHostName, szA, szDes;
+	//szLogID.Format("%d",nID);
+	CTime time = CTime::GetCurrentTime();
+	CString szDate = time.Format("%Y-%m-%d");
+	CString szTime = time.Format("%H:%M:%S");
+	char sBuf[255];
+	gethostname(sBuf, 255);
+	CString szSQL;
+	szSQL.Format(_T("Insert into G_Log(log_Date,log_Time,User_Title,log_Action,Log_Des) values('%s','%s','%s','%s','%s')"),szDate,szTime,szUserTitle,szAction,szStr);
+	return execSQL(pDB, szSQL);
+}
+
+long getFreeID(CAdoConnection *pDB, const CString szTable)
+{
+	CString szSQL;
+	long var;
+	long lID;
+
+	if (szTable.IsEmpty())
+		return -1;
+
+	CAdoRecordSet RegSet;
+	RegSet.SetAdoConnection(pDB);
+	RegSet.SetCursorLocation();
+
+	pDB->BeginTrans();
+
+	szSQL = "INSERT INTO y_quenextid (tableName, nextID) VALUES('";
+	szSQL += szTable;
+	szSQL += "', 0)";
+	pDB->Execute(szSQL);
+	//execSQL(szSQL);
+
+	szSQL = "UPDATE y_quenextid SET nextID = nextID+1 WHERE tableName = '";
+	szSQL += szTable;
+	szSQL += "'";
+	if (pDB->Execute(szSQL) == NULL)
+	{
+		pDB->RollbackTrans();
+		AddLog(pDB, L"ERROR", szSQL, L"");
+		return -1;
+	}
+	szSQL = "SELECT nextID FROM y_quenextid WHERE tableName = '";
+	szSQL += szTable;
+	szSQL += "'";
+	try {
+		if (!RegSet.Open(szSQL))
+		{
+			pDB->RollbackTrans();
+			AddLog(pDB, L"ERROR", szSQL, L"");
+			return -1;
+		}
+	}
+	catch (_com_error e)
+	{
+		pDB->RollbackTrans();
+		AddLog(pDB, L"ERROR", szSQL, L"");
+		return -1;
+	}
+	if (RegSet.IsEOF())
+	{
+		pDB->RollbackTrans();
+		AddLog(pDB, L"ERROR", szSQL, L"");
+		return -1;
+	}
+	RegSet.GetFieldValue((long)0, var);
+	lID = var;
+	RegSet.Close();
+	pDB->CommitTrans();
+	return lID;
+}
+bool execSQL(CAdoConnection *pDB, CString &szSQL)
+{
+	bool b = true;
+	int nCount = 0;
+	int nTimes = 5;
+	try
+	{
+		while (nCount < nTimes)
+		{
+			nCount++;
+			if (pDB->Execute(szSQL) == NULL)
+			{
+				Sleep(100);
+				if (nCount == nTimes)
+				{
+					return false;
+				}
+			}
+			else
+			{
+				return b;
+			}
+		}
+	}
+	catch (_com_error e)
+	{
+		AfxMessageBox(L"sql Execute falied:" + szSQL);
+		b = false;
+	}
+
+	return b;
 }

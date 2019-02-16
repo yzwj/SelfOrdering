@@ -102,10 +102,13 @@ void COrderContainerCtrl::UpdateOrder()
 		dbMoney += info->nProductCounts* info->productInfo.dbMoney;
 		nOrder += info->nProductCounts;
 	}
-	szMoney.Format(L"TOTAL: $%.2lf", dbMoney);
-	szOrder.Format(L"TOTAL NUMBER OF CUPS :  %d", nOrder);
-	UpdateCounts(szOrder);
-	UpdateTotalMoney(szMoney);
+	CString szTotalMoney,szTotalCups;
+	szTotalMoney.LoadStringW(IDS_TOTAL_MONEY);
+	szTotalCups.LoadStringW(IDS_TOTAL_CUPS);
+	szMoney.Format(L" : $%.2lf",dbMoney);
+	szOrder.Format(L" : %d",nOrder);
+	UpdateCounts(szTotalCups+szOrder);
+	UpdateTotalMoney(szTotalMoney+szMoney);
 }
 BOOL COrderContainerCtrl::OnMouseDown(int nButton, const CBCGPPoint& pt)
 {

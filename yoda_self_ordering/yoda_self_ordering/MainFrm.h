@@ -3,7 +3,7 @@
 
 
 #pragma once
-
+#include "XInfoTip.h"
 class CMainFrame : public CFrameWnd
 {
 	
@@ -14,6 +14,7 @@ protected: // create from serialization only
 public:
 	int m_cx;
 	int m_cy;
+	CXInfoTip		m_Tip;
 	// Operations
 public:
 	void FullScreen();
@@ -39,6 +40,7 @@ protected:
 	afx_msg LRESULT OnOrderView(WPARAM wp, LPARAM lp);
 	afx_msg LRESULT OnCategroyView(WPARAM wp, LPARAM lp);
 	afx_msg LRESULT OnHomeView(WPARAM wp, LPARAM lp);
+	afx_msg	LRESULT ShowBalloonTip(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 
 public:

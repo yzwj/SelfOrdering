@@ -129,11 +129,16 @@ BOOL CFloat::OnInitDialog()
 	int width = pngImage.GetWidth();
 	startGraphics.SetInterpolationMode(InterpolationModeHighQualityBicubic);
 	startGraphics.FillRectangle(&solidBrush, 0, 0, width , height);
-	startGraphics.DrawImage(&pngImage,Rect(0, 0, width, height), 0, 0, pngImage.GetWidth(), pngImage.GetHeight(), UnitPixel);
-
+	//startGraphics.DrawImage(&pngImage,Rect(0, 0, width, height), 0, 0, pngImage.GetWidth(), pngImage.GetHeight(), UnitPixel);
+	SolidBrush sBrush(RGB(255,0,0));
+	static REAL const fontWeightOfDigit = 5.5f;
+	static WCHAR const * fontFamilyName = L"Arial";
+	static Color const fontColorOfDigit(255, 0, 0, 0);
+	Font fontDigit(fontFamilyName, fontWeightOfDigit, 10, 10, NULL);
+	startGraphics.DrawString(L"Hello World!!!", 20, &fontDigit, PointF(100, 200), &sBrush);
+	//startGraphics.DrawString("Hello World!!!",20,)
 	SetWindowPos(&CWnd::wndTopMost, x-width*2, y/5, startSize.cx, startSize.cy,
 		0/*SWP_NOSIZE|SWP_NOMOVE*/); //要使该函数能成功设置尺寸和位置，不能使用参数 SWP_NOSIZE|SWP_NOMOVE
-
 	HDC   hWinDC   =   ::GetDC(NULL);  
 	CRect rc;
 	GetWindowRect(&rc);

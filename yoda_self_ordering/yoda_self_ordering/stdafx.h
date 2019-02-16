@@ -62,13 +62,16 @@ extern BOOL	gbChinese;
 #define  WM_CLICK_CART	 WM_USER+3
 #define  WM_CLICK_HOME   WM_USER+4
 #define  WM_HOME_VIEW	 WM_USER+5
+#define  ID_SHOWTOOLTIP  4001
 #include <gdiplus.h> 
 #pragma comment(lib, "gdiplus.lib") 
 using namespace Gdiplus; 
 
 #include "./idle/IdleUI.h"
 #pragma comment(lib,"./idle/IdleUI.lib")
-
+#ifndef HAVE_CONFIG_H
+#define  HAVE_CONFIG_H
+#endif
 #if defined _M_IX86
 #pragma comment(linker,"/manifestdependency:\"type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='x86' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #elif defined _M_IA64

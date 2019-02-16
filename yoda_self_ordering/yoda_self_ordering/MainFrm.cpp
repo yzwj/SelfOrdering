@@ -5,8 +5,8 @@
 #include "yoda_self_ordering.h"
 #include "yoda_self_orderingView.h"
 #include "MainFrm.h"
-//#include "float.h"
-//CFloat* CFloat::c_pFloat;
+#include "TipInfo.h"
+CTipInfo* CTipInfo::c_pTip;
 UINT	gCurViewID;
 extern PRODUCTINFO gCurProduct;
 extern 	CList<LPORDERINFO, LPORDERINFO>	glstOrder;
@@ -24,6 +24,7 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_MESSAGE(WM_CLICK_CART,OnOrderView)
 	ON_MESSAGE(WM_CLICK_HOME, OnCategroyView)
 	ON_MESSAGE(WM_HOME_VIEW, OnHomeView)
+	ON_MESSAGE(ID_SHOWTOOLTIP, &CMainFrame::ShowBalloonTip)
 	ON_WM_TIMER()
 END_MESSAGE_MAP()
 
@@ -96,9 +97,9 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 #ifndef _DEBUG
 	FullScreen();
 #endif
+	m_Tip.Create(this);
 	SetTimer(1001,1000,NULL);
 	SetTimer(1002, 60*1000, NULL);
-	
 	UpdateData(false);
 	// Menu will not take the focus on activation:
 	return 0;
@@ -139,7 +140,17 @@ BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 #endif
 	return TRUE;
 }
-
+LRESULT CMainFrame::ShowBalloonTip(WPARAM wParam, LPARAM lParam)
+{
+	CString strCfg;
+	Cyoda_self_orderingView* pView = (Cyoda_self_orderingView*)GetActiveView();
+	CRect rectClient;
+	pView->GetWindowRect(&rectClient);
+	m_Tip.SetClientRect(rectClient);
+	strCfg.LoadStringW((UINT)wParam);
+	m_Tip.Show(strCfg, NULL);
+	return 0;
+}
 LRESULT CMainFrame::OnCreateCategroy(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
 	Cyoda_self_orderingView * pView = (Cyoda_self_orderingView*)GetActiveView();

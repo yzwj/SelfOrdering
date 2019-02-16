@@ -256,28 +256,28 @@ void Cyoda_self_orderingView::ShowView(int nViewID)
 	switch (nViewID)
 	{
 	case ID_VIEW_ICE_SUGAR_TOPPING:
-		pUITiles->OnShowView(RUNTIME_CLASS(CNormalContainerCtrl), IDR_BCGP_VISUAL_XML1, rcContainer);
+		pUITiles->OnShowView(RUNTIME_CLASS(CNormalContainerCtrl), IDR_BCGP_VISUAL_XML1, rcContainer,true);
 		break;
 	case ID_VIEW_ICE_HONEY_TOPPING:
-		pUITiles->OnShowView(RUNTIME_CLASS(CHoneyContainerCtrl), IDR_BCGP_VISUAL_XML3, rcContainer);
+		pUITiles->OnShowView(RUNTIME_CLASS(CHoneyContainerCtrl), IDR_BCGP_VISUAL_XML3, rcContainer, true);
 		break;
 	case ID_VIEW_ICE_TOPPING:
-		pUITiles->OnShowView(RUNTIME_CLASS(CIceToppingContainerCtrl), IDR_BCGP_VISUAL_XML4, rcContainer);
+		pUITiles->OnShowView(RUNTIME_CLASS(CIceToppingContainerCtrl), IDR_BCGP_VISUAL_XML4, rcContainer, true);
 		break;
 	case ID_VIEW_SIZE_TOPPING:
-		pUITiles->OnShowView(RUNTIME_CLASS(CSizeToppingContainerCtrl), IDR_BCGP_VISUAL_XML5, rcContainer);
+		pUITiles->OnShowView(RUNTIME_CLASS(CSizeToppingContainerCtrl), IDR_BCGP_VISUAL_XML5, rcContainer, true);
 		break;
 	case ID_VIEW_TOPPING:
-		pUITiles->OnShowView(RUNTIME_CLASS(CToppingContainerCtrl), IDR_BCGP_VISUAL_XML6, rcContainer);
+		pUITiles->OnShowView(RUNTIME_CLASS(CToppingContainerCtrl), IDR_BCGP_VISUAL_XML6, rcContainer, true);
 		break;
 	case ID_VIEW_CHECK_ORDERING:
-		pUITiles->OnShowView(RUNTIME_CLASS(COrderContainerCtrl), IDR_BCGP_VISUAL_XML2, rcContainer);
+		pUITiles->OnShowView(RUNTIME_CLASS(COrderContainerCtrl), IDR_BCGP_VISUAL_XML2, rcContainer, true);
 		break;
 	case ID_VIEW_PAYMENT:
-		pUITiles->OnShowView(RUNTIME_CLASS(CPayContainerCtrl), IDR_BCGP_VISUAL_XML7,CBCGPRect(0,0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)));
+		pUITiles->OnShowView(RUNTIME_CLASS(CPayContainerCtrl), IDR_BCGP_VISUAL_XML7, rcContainer, true);
 		break;
 	case ID_VIEW_HOME:
-		pUITiles->OnShowView(RUNTIME_CLASS(CHomeContainerCtrl), IDR_BCGP_VISUAL_XML8, CBCGPRect(0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)));
+		pUITiles->OnShowView(RUNTIME_CLASS(CHomeContainerCtrl), IDR_BCGP_VISUAL_XML8, CBCGPRect(0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN)), false);
 		break;
 	}	
 }
@@ -407,14 +407,14 @@ void Cyoda_self_orderingView::CreateProduct(int nCategroy)
 {
 	CBCGPWinUITiles* pUITiles = m_wndUITiles.GetWinUITiles();
 	ASSERT_VALID(pUITiles);
-	pUITiles->RemoveCaptionButtons();
+	if (m_lstProduct.GetSize() <= 0)
+		return;
 	if (pUITiles->GetCurrentView() != NULL)
 	{
 		pUITiles->OnCloseView();
 	}
+	pUITiles->RemoveCaptionButtons();
 	pUITiles->RemoveAll();
-	if (m_lstProduct.GetSize() <= 0)
-		return;
 	for (POSITION pos = m_lstCategroy.GetHeadPosition(); pos != NULL;)
 	{
 		LPCATEGROYINFO pCategroy = m_lstCategroy.GetNext(pos);
@@ -447,7 +447,6 @@ void Cyoda_self_orderingView::CreateProduct(int nCategroy)
 				pItem->SetView(RUNTIME_CLASS(CIceToppingContainerCtrl), IDR_BCGP_VISUAL_XML4);
 		}
 	}
-	
 	SetThemeColors();
 	pUITiles->SetScrollBarStyle(CBCGPVisualScrollBar::BCGP_VISUAL_SCROLLBAR_STYLE::BCGP_VISUAL_SCROLLBAR_3D_ROUNDED);
 	EnableBackButton();
@@ -561,7 +560,7 @@ LRESULT Cyoda_self_orderingView::OnClickCaptionButton(WPARAM /*wp*/, LPARAM lp)
 			HFONT hFont = ::CreateFontIndirect(&lf);
 			params.hfontText = hFont;
 			params.lpszCaption = L"";
-			params.lpszText = L"If enter the home gage,current \n\torder will be cancel.\n Will you continue!\n";
+			params.lpszText = L"If jump to home Page,current order will be cancel.\nWill you continue!\n";
 			params.bUseNativeControls = 0;
 			params.dwStyle = MB_YESNO;
 			params.dwStyle |= MB_ICONWARNING;
@@ -569,7 +568,7 @@ LRESULT Cyoda_self_orderingView::OnClickCaptionButton(WPARAM /*wp*/, LPARAM lp)
 			params.bDrawButtonsBanner = 0;
 			
 			params.hInstance = ::GetModuleHandle(NULL);
-			theApp.SetVisualTheme(CBCGPWinApp::BCGP_VISUAL_THEME_OFFICE_2016_DARK_GRAY);
+			
 			if (IDYES == BCGPMessageBoxIndirect(&params))
 			{
 				ShowView(ID_VIEW_HOME);
@@ -580,7 +579,6 @@ LRESULT Cyoda_self_orderingView::OnClickCaptionButton(WPARAM /*wp*/, LPARAM lp)
 		{
 			ShowView(ID_VIEW_HOME);
 		}
-		//CreateCategory();
 	}
 	else if (pButton->GetCommandID() == ID_CART)
 	{
@@ -827,7 +825,7 @@ int Cyoda_self_orderingView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
 	if (CView::OnCreate(lpCreateStruct) == -1)
 		return -1;
-
+	theApp.SetVisualTheme(CBCGPWinApp::BCGP_VISUAL_THEME_OFFICE_2016_BLACK);
 	// TODO:  Add your specialized creation code here
 	if (!m_wndUITiles.Create(CRect(0, 0, 0, 0), this, 1))
 	{
@@ -840,7 +838,7 @@ int Cyoda_self_orderingView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	InitUITiles();
 	//CreateCategory();
 	ShowView(ID_VIEW_HOME);
-	RedrawWindow();
+	//RedrawWindow();
 	return 0;
 }
 //获得默认打印机名称和默认的纸张

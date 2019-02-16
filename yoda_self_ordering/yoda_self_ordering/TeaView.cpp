@@ -1,7 +1,6 @@
 ﻿#include "stdafx.h"
 #include "yoda_self_ordering.h"
 #include "TeaView.h"
-
 #ifdef _DEBUG
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
@@ -262,10 +261,6 @@ void CNormalContainerCtrl::CommandInit(const CString& szProduct)
 		pImage->SetFillBrush(CBCGPBrush(CBCGPColor::GreenYellow));
 		m_pLastImageGauge = pImage;
 	}
-	
-	CBCGPImageGaugeImpl* pImage = DYNAMIC_DOWNCAST(CBCGPImageGaugeImpl, pContainer->GetByID(ID_IMAGE_NORMAL_ICE));
-	pImage->SetOpacity(1, TRUE);
-	m_pLastImageGauge = pImage;
 	m_szProduct = szProduct;
 	SetTextInfo(ID_PRODUCT_TEXT, szProduct);
 	m_szSize = gCurProduct.szSize;

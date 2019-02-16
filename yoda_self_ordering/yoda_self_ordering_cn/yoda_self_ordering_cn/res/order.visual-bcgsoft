@@ -61,7 +61,7 @@
 				<ID>
 					<VALUE>161</VALUE>
 				</ID>
-				<RECT>41, 1155, 240, 1233</RECT>
+				<RECT>41, 1155, 240, 1242</RECT>
 				<COLORS>
 					<TEXT_BRUSH>
 						<COLOR>240, 248, 255</COLOR>
@@ -74,7 +74,6 @@
 					<COLOR>0, 0, 0, 0</COLOR>
 				</BACK_OUTLINE>
 				<DRAW_FLAGS>1</DRAW_FLAGS>
-				<DATA_VALUE>总杯数 : 1</DATA_VALUE>
 				<TEXTFORMAT>
 					<FAMILY>Arial</FAMILY>
 					<SIZE>-28.000000</SIZE>
@@ -102,7 +101,6 @@
 					<COLOR>0, 0, 0, 0</COLOR>
 				</BACK_OUTLINE>
 				<DRAW_FLAGS>1</DRAW_FLAGS>
-				<DATA_VALUE>金额 :</DATA_VALUE>
 				<TEXTFORMAT>
 					<FAMILY>Arial</FAMILY>
 					<SIZE>-32.000000</SIZE>

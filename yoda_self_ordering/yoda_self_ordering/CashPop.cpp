@@ -57,8 +57,10 @@ BOOL CCashPop::OnInitDialog()
 void CCashPop::OnBnClickedButtonHome()
 {
 	// TODO: Add your control notification handler code here
+	KillTimer(1000);
 	SendMessage(WM_CLOSE);
 	::PostMessage(AfxGetMainWnd()->m_hWnd, WM_HOME_VIEW, 0, 0);
+	
 }
 
 void CCashPop::OnClose()
@@ -70,7 +72,7 @@ void CCashPop::OnClose()
 
 void CCashPop::OnTimer(UINT_PTR nIDEvent)
 {
-	// TODO: Add your message handler code here and/or call default
+	// TODO: Add your message handler code here and/or call default	
 	OnBnClickedButtonHome();
 	CBCGPPopupDlg::OnTimer(nIDEvent);
 }

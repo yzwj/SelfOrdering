@@ -7,7 +7,7 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "yoda_self_ordering", "yoda_
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "yoda_self_ordering_cn", "yoda_self_ordering_cn\yoda_self_ordering_cn\yoda_self_ordering_cn.vcxproj", "{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BCGCBPro140", "..\..\yodaSrc\BCGSoft25\BCGCBPro\BCGCBPro140.vcxproj", "{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "BCGCBPro140", "..\..\yoda src\BCGSoft25\BCGCBPro\BCGCBPro140.vcxproj", "{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,10 +15,18 @@ Global
 		Debug MFC Shared|x86 = Debug MFC Shared|x86
 		Debug|x64 = Debug|x64
 		Debug|x86 = Debug|x86
+		Debug-Dll|x64 = Debug-Dll|x64
+		Debug-Dll|x86 = Debug-Dll|x86
+		Debug-Lib|x64 = Debug-Lib|x64
+		Debug-Lib|x86 = Debug-Lib|x86
 		Release MFC Shared|x64 = Release MFC Shared|x64
 		Release MFC Shared|x86 = Release MFC Shared|x86
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
+		Release-Dll|x64 = Release-Dll|x64
+		Release-Dll|x86 = Release-Dll|x86
+		Release-Lib|x64 = Release-Lib|x64
+		Release-Lib|x86 = Release-Lib|x86
 		Unicode Debug MFC Shared|x64 = Unicode Debug MFC Shared|x64
 		Unicode Debug MFC Shared|x86 = Unicode Debug MFC Shared|x86
 		Unicode Debug|x64 = Unicode Debug|x64
@@ -37,6 +45,14 @@ Global
 		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Debug|x64.Build.0 = Debug|x64
 		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Debug|x86.ActiveCfg = Debug|Win32
 		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Debug|x86.Build.0 = Debug|Win32
+		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Debug-Dll|x64.ActiveCfg = Debug|x64
+		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Debug-Dll|x64.Build.0 = Debug|x64
+		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Debug-Dll|x86.ActiveCfg = Debug|Win32
+		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Debug-Dll|x86.Build.0 = Debug|Win32
+		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Debug-Lib|x64.ActiveCfg = Debug|x64
+		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Debug-Lib|x64.Build.0 = Debug|x64
+		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Debug-Lib|x86.ActiveCfg = Debug|Win32
+		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Debug-Lib|x86.Build.0 = Debug|Win32
 		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Release MFC Shared|x64.ActiveCfg = Release|x64
 		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Release MFC Shared|x64.Build.0 = Release|x64
 		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Release MFC Shared|x86.ActiveCfg = Release|Win32
@@ -45,6 +61,14 @@ Global
 		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Release|x64.Build.0 = Release|x64
 		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Release|x86.ActiveCfg = Release|Win32
 		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Release|x86.Build.0 = Release|Win32
+		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Release-Dll|x64.ActiveCfg = Release|x64
+		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Release-Dll|x64.Build.0 = Release|x64
+		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Release-Dll|x86.ActiveCfg = Release|Win32
+		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Release-Dll|x86.Build.0 = Release|Win32
+		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Release-Lib|x64.ActiveCfg = Release|x64
+		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Release-Lib|x64.Build.0 = Release|x64
+		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Release-Lib|x86.ActiveCfg = Release|Win32
+		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Release-Lib|x86.Build.0 = Release|Win32
 		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Unicode Debug MFC Shared|x64.ActiveCfg = Debug|x64
 		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Unicode Debug MFC Shared|x64.Build.0 = Debug|x64
 		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Unicode Debug MFC Shared|x86.ActiveCfg = Debug|Win32
@@ -69,6 +93,14 @@ Global
 		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Debug|x64.Build.0 = Debug|x64
 		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Debug|x86.ActiveCfg = Debug|Win32
 		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Debug|x86.Build.0 = Debug|Win32
+		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Debug-Dll|x64.ActiveCfg = Debug|x64
+		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Debug-Dll|x64.Build.0 = Debug|x64
+		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Debug-Dll|x86.ActiveCfg = Debug|Win32
+		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Debug-Dll|x86.Build.0 = Debug|Win32
+		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Debug-Lib|x64.ActiveCfg = Debug|x64
+		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Debug-Lib|x64.Build.0 = Debug|x64
+		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Debug-Lib|x86.ActiveCfg = Debug|Win32
+		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Debug-Lib|x86.Build.0 = Debug|Win32
 		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Release MFC Shared|x64.ActiveCfg = Release|x64
 		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Release MFC Shared|x64.Build.0 = Release|x64
 		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Release MFC Shared|x86.ActiveCfg = Release|Win32
@@ -77,6 +109,14 @@ Global
 		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Release|x64.Build.0 = Release|x64
 		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Release|x86.ActiveCfg = Release|Win32
 		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Release|x86.Build.0 = Release|Win32
+		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Release-Dll|x64.ActiveCfg = Release|x64
+		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Release-Dll|x64.Build.0 = Release|x64
+		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Release-Dll|x86.ActiveCfg = Release|Win32
+		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Release-Dll|x86.Build.0 = Release|Win32
+		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Release-Lib|x64.ActiveCfg = Release|x64
+		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Release-Lib|x64.Build.0 = Release|x64
+		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Release-Lib|x86.ActiveCfg = Release|Win32
+		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Release-Lib|x86.Build.0 = Release|Win32
 		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Unicode Debug MFC Shared|x64.ActiveCfg = Debug|x64
 		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Unicode Debug MFC Shared|x64.Build.0 = Debug|x64
 		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Unicode Debug MFC Shared|x86.ActiveCfg = Debug|Win32
@@ -101,6 +141,14 @@ Global
 		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Debug|x64.Build.0 = Debug|x64
 		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Debug|x86.ActiveCfg = Debug|Win32
 		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Debug|x86.Build.0 = Debug|Win32
+		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Debug-Dll|x64.ActiveCfg = Debug|x64
+		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Debug-Dll|x64.Build.0 = Debug|x64
+		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Debug-Dll|x86.ActiveCfg = Debug|Win32
+		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Debug-Dll|x86.Build.0 = Debug|Win32
+		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Debug-Lib|x64.ActiveCfg = Debug|x64
+		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Debug-Lib|x64.Build.0 = Debug|x64
+		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Debug-Lib|x86.ActiveCfg = Debug|Win32
+		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Debug-Lib|x86.Build.0 = Debug|Win32
 		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Release MFC Shared|x64.ActiveCfg = Release|x64
 		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Release MFC Shared|x64.Build.0 = Release|x64
 		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Release MFC Shared|x86.ActiveCfg = Release|Win32
@@ -109,6 +157,14 @@ Global
 		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Release|x64.Build.0 = Release|x64
 		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Release|x86.ActiveCfg = Release|Win32
 		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Release|x86.Build.0 = Release|Win32
+		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Release-Dll|x64.ActiveCfg = Release|x64
+		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Release-Dll|x64.Build.0 = Release|x64
+		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Release-Dll|x86.ActiveCfg = Release|Win32
+		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Release-Dll|x86.Build.0 = Release|Win32
+		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Release-Lib|x64.ActiveCfg = Release|x64
+		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Release-Lib|x64.Build.0 = Release|x64
+		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Release-Lib|x86.ActiveCfg = Release|Win32
+		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Release-Lib|x86.Build.0 = Release|Win32
 		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Unicode Debug MFC Shared|x64.ActiveCfg = Unicode Debug|x64
 		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Unicode Debug MFC Shared|x64.Build.0 = Unicode Debug|x64
 		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Unicode Debug MFC Shared|x86.ActiveCfg = Unicode Debug|Win32

@@ -76,8 +76,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
     <OutDir>D:\yoda src\BCGSoft25\Bin</OutDir>
-    <IncludePath>$(IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\yoda src\BCGSoft25\BCGCBPro;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\yoda src\BCGSoft25\Bin;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
@@ -85,8 +85,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
     <OutDir>D:\yoda src\BCGSoft25\Bin</OutDir>
-    <IncludePath>$(IncludePath)</IncludePath>
-    <LibraryPath>$(LibraryPath)</LibraryPath>
+    <IncludePath>D:\yoda src\BCGSoft25\BCGCBPro;$(IncludePath)</IncludePath>
+    <LibraryPath>D:\yoda src\BCGSoft25\Bin;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -99,7 +99,7 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>D:\yoda src\BCGSoft25\BCGCBPro;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\yoda src\BCGSoft25\BCGCBPro;LibQREncode;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -152,7 +152,7 @@
       <MinimalRebuild>false</MinimalRebuild>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>D:\yoda src\BCGSoft25\BCGCBPro;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\yoda src\BCGSoft25\BCGCBPro;LibQREncode;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -213,15 +213,36 @@
     <ClInclude Include="HoneyView.h" />
     <ClInclude Include="IceToppingView.h" />
     <ClInclude Include="ItemTile.h" />
+    <ClInclude Include="LibQREncode\bitstream.h" />
+    <ClInclude Include="LibQREncode\config.h" />
+    <ClInclude Include="LibQREncode\mask.h" />
+    <ClInclude Include="LibQREncode\mmask.h" />
+    <ClInclude Include="LibQREncode\mqrspec.h" />
+    <ClInclude Include="LibQREncode\png.h" />
+    <ClInclude Include="LibQREncode\pngconf.h" />
+    <ClInclude Include="LibQREncode\pngdebug.h" />
+    <ClInclude Include="LibQREncode\pnginfo.h" />
+    <ClInclude Include="LibQREncode\pnglibconf.h" />
+    <ClInclude Include="LibQREncode\pngpriv.h" />
+    <ClInclude Include="LibQREncode\pngstruct.h" />
+    <ClInclude Include="LibQREncode\qrencode.h" />
+    <ClInclude Include="LibQREncode\qrencode_inner.h" />
+    <ClInclude Include="LibQREncode\qrinput.h" />
+    <ClInclude Include="LibQREncode\qrspec.h" />
+    <ClInclude Include="LibQREncode\rscode.h" />
+    <ClInclude Include="LibQREncode\split.h" />
     <ClInclude Include="MainFrm.h" />
     <ClInclude Include="OrderView.h" />
     <ClInclude Include="PaymentView.h" />
     <ClInclude Include="printerlibs.h" />
+    <ClInclude Include="QRCodeDlg.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="sizeToppingView.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="TeaView.h" />
+    <ClInclude Include="TipInfo.h" />
     <ClInclude Include="ToppingView.h" />
+    <ClInclude Include="XInfoTip.h" />
     <ClInclude Include="yoda_self_ordering.h" />
     <ClInclude Include="yoda_self_orderingDoc.h" />
     <ClInclude Include="yoda_self_orderingView.h" />
@@ -235,9 +256,62 @@
     <ClCompile Include="HoneyView.cpp" />
     <ClCompile Include="IceToppingView.cpp" />
     <ClCompile Include="ItemTile.cpp" />
+    <ClCompile Include="LibQREncode\bitstream.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="LibQREncode\mask.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+      </PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="LibQREncode\mmask.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="LibQREncode\mqrspec.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="LibQREncode\qrenc.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="LibQREncode\qrencode.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="LibQREncode\qrinput.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="LibQREncode\qrspec.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="LibQREncode\rscode.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </PrecompiledHeader>
+    </ClCompile>
+    <ClCompile Include="LibQREncode\split.c">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">NotUsing</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+      </PrecompiledHeader>
+    </ClCompile>
     <ClCompile Include="MainFrm.cpp" />
     <ClCompile Include="OrderView.cpp" />
     <ClCompile Include="PaymentView.cpp" />
+    <ClCompile Include="QRCodeDlg.cpp" />
     <ClCompile Include="sizeToppingView.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -246,7 +320,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="TeaView.cpp" />
+    <ClCompile Include="TipInfo.cpp" />
     <ClCompile Include="ToppingView.cpp" />
+    <ClCompile Include="XInfoTip.cpp" />
     <ClCompile Include="yoda_self_ordering.cpp" />
     <ClCompile Include="yoda_self_orderingDoc.cpp" />
     <ClCompile Include="yoda_self_orderingView.cpp" />

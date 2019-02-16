@@ -13,6 +13,12 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\QRCode">
+      <UniqueIdentifier>{20afd995-cd25-44a8-9898-78733b786f7a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\QRCode">
+      <UniqueIdentifier>{db0fca39-564c-4b63-8c10-d1a7faf8c4e6}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -78,6 +84,69 @@
     <ClInclude Include="printerlibs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="XInfoTip.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="TipInfo.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="QRCodeDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="LibQREncode\bitstream.h">
+      <Filter>Header Files\QRCode</Filter>
+    </ClInclude>
+    <ClInclude Include="LibQREncode\config.h">
+      <Filter>Header Files\QRCode</Filter>
+    </ClInclude>
+    <ClInclude Include="LibQREncode\mask.h">
+      <Filter>Header Files\QRCode</Filter>
+    </ClInclude>
+    <ClInclude Include="LibQREncode\mmask.h">
+      <Filter>Header Files\QRCode</Filter>
+    </ClInclude>
+    <ClInclude Include="LibQREncode\mqrspec.h">
+      <Filter>Header Files\QRCode</Filter>
+    </ClInclude>
+    <ClInclude Include="LibQREncode\png.h">
+      <Filter>Header Files\QRCode</Filter>
+    </ClInclude>
+    <ClInclude Include="LibQREncode\pngconf.h">
+      <Filter>Header Files\QRCode</Filter>
+    </ClInclude>
+    <ClInclude Include="LibQREncode\pngdebug.h">
+      <Filter>Header Files\QRCode</Filter>
+    </ClInclude>
+    <ClInclude Include="LibQREncode\pnginfo.h">
+      <Filter>Header Files\QRCode</Filter>
+    </ClInclude>
+    <ClInclude Include="LibQREncode\pnglibconf.h">
+      <Filter>Header Files\QRCode</Filter>
+    </ClInclude>
+    <ClInclude Include="LibQREncode\pngpriv.h">
+      <Filter>Header Files\QRCode</Filter>
+    </ClInclude>
+    <ClInclude Include="LibQREncode\pngstruct.h">
+      <Filter>Header Files\QRCode</Filter>
+    </ClInclude>
+    <ClInclude Include="LibQREncode\qrencode.h">
+      <Filter>Header Files\QRCode</Filter>
+    </ClInclude>
+    <ClInclude Include="LibQREncode\qrencode_inner.h">
+      <Filter>Header Files\QRCode</Filter>
+    </ClInclude>
+    <ClInclude Include="LibQREncode\qrinput.h">
+      <Filter>Header Files\QRCode</Filter>
+    </ClInclude>
+    <ClInclude Include="LibQREncode\qrspec.h">
+      <Filter>Header Files\QRCode</Filter>
+    </ClInclude>
+    <ClInclude Include="LibQREncode\rscode.h">
+      <Filter>Header Files\QRCode</Filter>
+    </ClInclude>
+    <ClInclude Include="LibQREncode\split.h">
+      <Filter>Header Files\QRCode</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="yoda_self_ordering.cpp">
@@ -133,6 +202,45 @@
     </ClCompile>
     <ClCompile Include="HomePage.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="XInfoTip.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="TipInfo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="QRCodeDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="LibQREncode\bitstream.c">
+      <Filter>Source Files\QRCode</Filter>
+    </ClCompile>
+    <ClCompile Include="LibQREncode\mask.c">
+      <Filter>Source Files\QRCode</Filter>
+    </ClCompile>
+    <ClCompile Include="LibQREncode\mmask.c">
+      <Filter>Source Files\QRCode</Filter>
+    </ClCompile>
+    <ClCompile Include="LibQREncode\mqrspec.c">
+      <Filter>Source Files\QRCode</Filter>
+    </ClCompile>
+    <ClCompile Include="LibQREncode\qrenc.c">
+      <Filter>Source Files\QRCode</Filter>
+    </ClCompile>
+    <ClCompile Include="LibQREncode\qrencode.c">
+      <Filter>Source Files\QRCode</Filter>
+    </ClCompile>
+    <ClCompile Include="LibQREncode\qrinput.c">
+      <Filter>Source Files\QRCode</Filter>
+    </ClCompile>
+    <ClCompile Include="LibQREncode\qrspec.c">
+      <Filter>Source Files\QRCode</Filter>
+    </ClCompile>
+    <ClCompile Include="LibQREncode\rscode.c">
+      <Filter>Source Files\QRCode</Filter>
+    </ClCompile>
+    <ClCompile Include="LibQREncode\split.c">
+      <Filter>Source Files\QRCode</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

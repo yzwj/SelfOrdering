@@ -14,6 +14,7 @@ public:
 	void InitImage();
 	void SetImage(UINT nID, UINT nImageID);
 	void SetImage(UINT nID, CString szImagePath);
+	BOOL SaveOrder(ORDERSTATUS orderStatus);
 	// Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CNormalContainerCtrl)
