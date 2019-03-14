@@ -169,5 +169,20 @@
     <Image Include="resource\White Pearls.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="resource\NETS.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resource\All Acceptance.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resource\FlashPay.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resource\NETS QR.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resource\PayFailed.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
 </Project>

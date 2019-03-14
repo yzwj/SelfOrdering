@@ -25,6 +25,7 @@ extern UINT	gCurViewID;
 PRODUCTINFO gCurProduct ;
 extern 	CList<LPORDERINFO, LPORDERINFO>	glstOrder;
 extern int gCurOrderIndex;
+
 // Cyoda_self_orderingView
 IMPLEMENT_DYNCREATE(Cyoda_self_orderingView, CView)
 
@@ -281,8 +282,9 @@ void Cyoda_self_orderingView::ShowView(int nViewID)
 		break;
 	}	
 }
-void Cyoda_self_orderingView::InitCategroy()
+BOOL Cyoda_self_orderingView::InitCategroy()
 {
+	m_lstCategroy.RemoveAll();
 	CString szSQL;
 	szSQL.Format(L"select * from y_category");
 	CAdoRecordSet recordset;
@@ -292,19 +294,19 @@ void Cyoda_self_orderingView::InitCategroy()
 	{
 		if (!recordset.Open(szSQL))
 		{
-			return;
+			return FALSE;
 		}
 	}
 	catch (_com_error e)
 	{
-		return;
+		return FALSE;
 	}
 
 	int nCount = recordset.GetRecordCount();
 	if (nCount <= 0)
 	{
 		recordset.Close();
-		return;
+		return FALSE;
 	}
 	CString szName, szPath, szFile,szNameCN,szFileCN;
 	int  nCategroy, nTextColor, nBackgroundColor;
@@ -330,10 +332,12 @@ void Cyoda_self_orderingView::InitCategroy()
 		recordset.MoveNext();
 	}
 	recordset.Close();
+	return TRUE;
 }
 
-void Cyoda_self_orderingView::InitProduct()
+BOOL Cyoda_self_orderingView::InitProduct()
 {
+	m_lstProduct.RemoveAll();
 	CString szSQL;
 	szSQL.Format(L"select * from y_item  where CURDATE() >= st_date and CURDATE() <ed_date order by item_desc");
 	CAdoRecordSet recordset;
@@ -343,19 +347,19 @@ void Cyoda_self_orderingView::InitProduct()
 	{
 		if (!recordset.Open(szSQL))
 		{
-			return;
+			return FALSE;
 		}
 	}
 	catch (_com_error e)
 	{
-		return;
+		return FALSE;
 	}
 
 	int nCount = recordset.GetRecordCount();
 	if (nCount <= 0)
 	{
 		recordset.Close();
-		return;
+		return FALSE;
 	}
 	CString szName, szPath, szFile,szThumbFile, szNameCN,szFileCN;
 	int  nCategroy,nProduct, nTextColor, nBackgroundColor;
@@ -400,7 +404,7 @@ void Cyoda_self_orderingView::InitProduct()
 		recordset.MoveNext();
 	}
 	recordset.Close();
-	
+	return TRUE;
 }
 
 void Cyoda_self_orderingView::CreateProduct(int nCategroy)
@@ -549,7 +553,7 @@ LRESULT Cyoda_self_orderingView::OnClickCaptionButton(WPARAM /*wp*/, LPARAM lp)
 	}
 	else if (pButton->GetCommandID() == ID_HOME)
 	{
-		if (glstOrder.GetSize() > 0)
+		/*if (glstOrder.GetSize() > 0)
 		{
 			BCGP_MSGBOXPARAMS params;
 			LOGFONT lf;
@@ -562,7 +566,7 @@ LRESULT Cyoda_self_orderingView::OnClickCaptionButton(WPARAM /*wp*/, LPARAM lp)
 			params.lpszCaption = L"";
 			params.lpszText = L"If jump to home Page,current order will be cancel.\nWill you continue!\n";
 			params.bUseNativeControls = 0;
-			params.dwStyle = MB_YESNO;
+			params.dwStyle = MB_OKCANCEL;
 			params.dwStyle |= MB_ICONWARNING;
 			params.bIgnoreStandardButtons = FALSE;
 			params.bDrawButtonsBanner = 0;
@@ -572,10 +576,10 @@ LRESULT Cyoda_self_orderingView::OnClickCaptionButton(WPARAM /*wp*/, LPARAM lp)
 			if (IDYES == BCGPMessageBoxIndirect(&params))
 			{
 				ShowView(ID_VIEW_HOME);
-				glstOrder.RemoveAll();
+				
 			}
 		}
-		else
+		else*/
 		{
 			ShowView(ID_VIEW_HOME);
 		}
@@ -786,9 +790,9 @@ LRESULT Cyoda_self_orderingView::OnCreateView(WPARAM, LPARAM lp)
 		pUITiles->RemoveTiles();
 		pUITiles->RemoveCaptionButtons();
 		EnableHomeButton();
-		EnablePaymentButton();
 		pUITiles->SetDirty(TRUE, TRUE);
 		gCurViewID = ID_VIEW_PAYMENT;
+		
 	}
 	CHomeContainerCtrl* pHomeView = DYNAMIC_DOWNCAST(CHomeContainerCtrl, pView);
 	if (pHomeView)
@@ -833,8 +837,16 @@ int Cyoda_self_orderingView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	}
 	CBCGPWinUITiles* pUITiles = m_wndUITiles.GetWinUITiles();
 	pUITiles->SetFillBrush(CBCGPBrush(CBCGPColor::Black));
-	InitCategroy();
-	InitProduct();
+	if (!InitCategroy())
+	{
+		MessageBox(L"INIT MENU ERROR.", L"ERROR", 0);
+		exit(0);
+	}	
+	if (!InitProduct())
+	{
+		MessageBox(L"INIT MENU ERROR.", L"ERROR", 0);
+		exit(0);
+	}
 	InitUITiles();
 	//CreateCategory();
 	ShowView(ID_VIEW_HOME);

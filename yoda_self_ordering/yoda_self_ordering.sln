@@ -21,6 +21,8 @@ Global
 		Debug-Lib|x86 = Debug-Lib|x86
 		Release MFC Shared|x64 = Release MFC Shared|x64
 		Release MFC Shared|x86 = Release MFC Shared|x86
+		Release_FB|x64 = Release_FB|x64
+		Release_FB|x86 = Release_FB|x86
 		Release|x64 = Release|x64
 		Release|x86 = Release|x86
 		Release-Dll|x64 = Release-Dll|x64
@@ -57,6 +59,10 @@ Global
 		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Release MFC Shared|x64.Build.0 = Release|x64
 		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Release MFC Shared|x86.ActiveCfg = Release|Win32
 		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Release MFC Shared|x86.Build.0 = Release|Win32
+		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Release_FB|x64.ActiveCfg = Release|x64
+		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Release_FB|x64.Build.0 = Release|x64
+		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Release_FB|x86.ActiveCfg = Release|Win32
+		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Release_FB|x86.Build.0 = Release|Win32
 		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Release|x64.ActiveCfg = Release|x64
 		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Release|x64.Build.0 = Release|x64
 		{7C04DB59-79E2-446B-B895-7ABDA64554AA}.Release|x86.ActiveCfg = Release|Win32
@@ -105,6 +111,10 @@ Global
 		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Release MFC Shared|x64.Build.0 = Release|x64
 		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Release MFC Shared|x86.ActiveCfg = Release|Win32
 		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Release MFC Shared|x86.Build.0 = Release|Win32
+		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Release_FB|x64.ActiveCfg = Release|x64
+		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Release_FB|x64.Build.0 = Release|x64
+		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Release_FB|x86.ActiveCfg = Release|Win32
+		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Release_FB|x86.Build.0 = Release|Win32
 		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Release|x64.ActiveCfg = Release|x64
 		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Release|x64.Build.0 = Release|x64
 		{C4B9A6A2-8A90-4602-B281-AFE2EAEC69BC}.Release|x86.ActiveCfg = Release|Win32
@@ -153,6 +163,10 @@ Global
 		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Release MFC Shared|x64.Build.0 = Release|x64
 		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Release MFC Shared|x86.ActiveCfg = Release|Win32
 		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Release MFC Shared|x86.Build.0 = Release|Win32
+		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Release_FB|x64.ActiveCfg = Release|x64
+		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Release_FB|x64.Build.0 = Release|x64
+		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Release_FB|x86.ActiveCfg = Release|Win32
+		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Release_FB|x86.Build.0 = Release|Win32
 		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Release|x64.ActiveCfg = Release|x64
 		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Release|x64.Build.0 = Release|x64
 		{9DF443FB-9EC0-4511-9262-D9AE2C74F5DD}.Release|x86.ActiveCfg = Release|Win32

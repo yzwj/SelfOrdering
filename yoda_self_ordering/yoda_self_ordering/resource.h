@@ -8,6 +8,8 @@
 #define IDS_TOTAL_MONEY                 103
 #define IDS_TIP_MAX_TOPPING             104
 #define IDS_QRCODE_DESC                 105
+#define IDS_SAVE_ORDER_ERROR            106
+#define IDS_ERROR_CAPTION               107
 #define IDR_MAINFRAME                   128
 #define IDB_AIYU                        166
 #define IDB_ALEO_VERA                   167
@@ -27,7 +29,6 @@
 #define IDR_BCGP_VISUAL_XML2            189
 #define IDB_PNG2                        190
 #define IDB_NO_TOPPING                  190
-#define IDB_BITMAP1                     191
 #define IDB_CONTINUE                    191
 #define IDB_TALL_64                     195
 #define IDB_TALL                        195
@@ -53,7 +54,6 @@
 #define IDD_DIALOG1                     220
 #define IDD_CASH_POP                    220
 #define IDB_PNG5                        222
-#define IDB_OK                          223
 #define IDB_COUNTER                     225
 #define IDB_NETS                        226
 #define IDR_BCGP_VISUAL_XML7            227
@@ -69,6 +69,21 @@
 #define IDD_DIALOG_NOTICE               237
 #define IDD_DIALOG3                     239
 #define IDD_SHOW_QRCODE                 239
+#define IDB_NETS_FLASHPAY               241
+#define IDB_PNG9                        245
+#define IDB_NETS_QR                     245
+#define IDD_DIALOG4                     247
+#define IDD_DIALOG5                     249
+#define IDD_DIALOG_GIF                  249
+#define IDR_GIF1                        253
+#define IDD_PAYMENT_STATUS              254
+#define IDB_PNG6                        256
+#define IDB_PAY_FAILED                  256
+#define IDD_NETS_OPER                   257
+#define IDB_NETSLOG                     259
+#define IDB_PAY_SUCCESS                 260
+#define IDB_PAY                         261
+#define IDB_PNG10                       262
 #define IDC_BUTTON_HOME                 1054
 #define IDC_STATIC_TIP1                 1055
 #define IDC_STATIC_TIP2                 1056
@@ -77,6 +92,17 @@
 #define IDC_EDIT2                       1059
 #define IDC_STATIC_DESC                 1059
 #define IDC_EDIT3                       1060
+#define IDC_QR_PIC                      1060
+#define IDC_EXIT_DESC                   1061
+#define IDC_STATIC_GIF                  1069
+#define IDC_BUTTON_TRY                  1071
+#define IDC_STATIC_ICON                 1072
+#define IDC_BUTTON_LOGON                1073
+#define IDC_BUTTON_SETTLEMENT           1074
+#define IDC_STATIC_LOG                  1075
+#define IDC_PROGRESS1                   1076
+#define IDC_PROGRESS                    1076
+#define IDC_STATIC_LOGO                 1077
 #define ID_VIEW_CUSTOMIZE               32770
 #define ID_VIEW_TOOLBARS                32771
 #define ID_BACK                         32775
@@ -99,9 +125,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        241
+#define _APS_NEXT_RESOURCE_VALUE        263
 #define _APS_NEXT_COMMAND_VALUE         32869
-#define _APS_NEXT_CONTROL_VALUE         1060
+#define _APS_NEXT_CONTROL_VALUE         1078
 #define _APS_NEXT_SYMED_VALUE           117
 #endif
 #endif

@@ -1,4 +1,4 @@
-// stdafx.h : include file for standard system include files,
+﻿// stdafx.h : include file for standard system include files,
 // or project specific include files that are used frequently,
 // but are changed infrequently
 
@@ -34,7 +34,6 @@
 
 // turns off MFC's hiding of some common and often safely ignored warning messages
 #define _AFX_ALL_WARNINGS
-
 #include <afxwin.h>         // MFC core and standard components
 #include <afxext.h>         // MFC extensions
 
@@ -53,10 +52,12 @@
 #include <BCGCBProInc.h>			// BCGPro Control Bar
 #include <afxcontrolbars.h>
 #include "Ado.h"
+#include "NETSLog.h"
 extern CAdoConnection	*gpDB;
 extern CString gIniFile;
 extern CString gExePath;
 extern BOOL	gbChinese;
+extern NETSLog gNETSLog;
 #define  WM_CLICK_ORDER  WM_USER+1
 #define  WM_EDIT_ORDER   WM_USER+2
 #define  WM_CLICK_CART	 WM_USER+3

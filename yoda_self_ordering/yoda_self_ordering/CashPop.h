@@ -26,4 +26,5 @@ public:
 	afx_msg void OnBnClickedButtonHome();
 	afx_msg void OnClose();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
+	afx_msg void OnPaint();
 };

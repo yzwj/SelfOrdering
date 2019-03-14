@@ -4,11 +4,15 @@
 #include "stdafx.h"
 #include "yoda_self_ordering.h"
 #include "MainFrm.h"
-
+#include "NetsOperation.h"
 #include "yoda_self_orderingDoc.h"
 #include "yoda_self_orderingView.h"
 #include "qrencode.h"
 #include "printerlibs.h"
+#include "SerialPort.h"
+#include <iostream>  
+#include <vector>
+using namespace std;
 #pragma comment(lib,"printerlibs.lib")
 extern 	CList<LPORDERINFO, LPORDERINFO>	glstOrder;
 extern  int gCurSerialNO;
@@ -52,6 +56,7 @@ BOOL Cyoda_self_orderingApp::InitInstance()
 {
 
 	CBCGPWinApp::InitInstance();
+	HRESULT hr = CoInitialize(NULL);
 	if (!IdleUIInit()) {
 		AfxMessageBox(L"fail to init keymouse hook");
 
@@ -100,7 +105,8 @@ BOOL Cyoda_self_orderingApp::InitInstance()
 		return FALSE;
 	AddDocTemplate(pDocTemplate);
 
-
+	CNETSOperation op;
+	op.DoModal();
 	
 	// Parse command line for standard shell commands, DDE, file open
 	CCommandLineInfo cmdInfo;
@@ -269,7 +275,7 @@ BOOL PrintReceipt(bool bCounter)
 	bool bSuccess = false;
 	EnumUsbToComboBox();
 	int h = Port_OpenUsb(gDeviceID);
-	if (h) 
+	if (h)
 	{
 		//printer header
 		TCHAR sBuf[255];
@@ -485,7 +491,8 @@ int	IsHaveSameID(CAdoConnection *pDB, CString sColName, CString sTableName, CStr
 	recordset.SetAdoConnection(pDB);
 	recordset.SetCursorLocation();
 	CString sSQL, sTemp;
-	sSQL = _T("select " + sColName + " from " + sTableName + " where " + sColName + " = " + szValue);//
+	//sSQL = _T("select " + sColName + " from " + sTableName + " where " + sColName + " = " + szValue);//
+	sSQL.Format(_T("select '%s' from '%s' where '%s' = '%s' and Date = CURDATE()"), sColName, sTableName, sColName, szValue);
 	int nID = 0;
 	try {
 		if (!recordset.Open(sSQL))
@@ -537,24 +544,17 @@ long getFreeID(CAdoConnection *pDB, const CString szTable)
 
 	pDB->BeginTrans();
 
-	szSQL = "INSERT INTO y_quenextid (tableName, nextID) VALUES('";
-	szSQL += szTable;
-	szSQL += "', 0)";
+	szSQL.Format(_T("INSERT INTO y_quenextid (tableName, nextID,Date) VALUES('%s',0,CURDATE())"),szTable);
 	pDB->Execute(szSQL);
-	//execSQL(szSQL);
 
-	szSQL = "UPDATE y_quenextid SET nextID = nextID+1 WHERE tableName = '";
-	szSQL += szTable;
-	szSQL += "'";
+	szSQL.Format(_T("UPDATE y_quenextid SET nextID = nextID+1 WHERE tableName = '%s' and Date = CURDATE()"), szTable);
 	if (pDB->Execute(szSQL) == NULL)
 	{
 		pDB->RollbackTrans();
 		AddLog(pDB, L"ERROR", szSQL, L"");
 		return -1;
 	}
-	szSQL = "SELECT nextID FROM y_quenextid WHERE tableName = '";
-	szSQL += szTable;
-	szSQL += "'";
+	szSQL.Format(_T("SELECT nextID FROM y_quenextid WHERE tableName ='%s' and Date = CURDATE()"), szTable);
 	try {
 		if (!RegSet.Open(szSQL))
 		{
@@ -613,3 +613,111 @@ bool execSQL(CAdoConnection *pDB, CString &szSQL)
 
 	return b;
 }
+
+BOOL ImageFromIDResource(UINT nID, LPCTSTR sTR, Image *&pImg)
+{
+	HINSTANCE hInst = AfxGetResourceHandle(); 
+	HRSRC hRsrc = ::FindResource(hInst, MAKEINTRESOURCE(nID), sTR); // type
+	if (!hRsrc)
+		return FALSE;
+	// load resource into memory
+	DWORD len = SizeofResource(hInst, hRsrc);
+	BYTE* lpRsrc = (BYTE*)LoadResource(hInst, hRsrc);
+	if (!lpRsrc)
+		return FALSE;
+	// Allocate global memory on which to create stream
+	HGLOBAL m_hMem = GlobalAlloc(GMEM_FIXED, len);
+	BYTE* pmem = (BYTE*)GlobalLock(m_hMem);
+	memcpy(pmem, lpRsrc, len);
+	GlobalUnlock(m_hMem);
+	IStream* pstm;
+	CreateStreamOnHGlobal(m_hMem, FALSE, &pstm);
+	// load from stream
+	pImg = Gdiplus::Image::FromStream(pstm);
+	// free/release stuff
+	pstm->Release();
+	FreeResource(lpRsrc);
+	GlobalFree(m_hMem);
+	return TRUE;
+}
+
+BOOL SaveOrder(ORDERSTATUS orderStatus)
+{
+	CString szSQL;
+	int nIndex = 1;
+	for (POSITION pos = glstOrder.GetHeadPosition(); pos != NULL;)
+	{
+		LPORDERINFO info = glstOrder.GetNext(pos);
+		if (info != NULL)
+		{
+			for (int i = 0; i < info->nProductCounts; i++)
+			{
+				szSQL.Format(_T("insert into y_order_list(OrderID,ItemIndex,ProductName,Size,Ice,SugarLevel,HoneyLevel,Topping,OrderDate,OrderTime,OrderStatus,PayTimes) VALUES(%d,%d,'%s %s','%s','%s','%s','%s','%s',CURDATE(),CURTIME(),%d,0)"),
+					gCurSerialNO, nIndex, info->productInfo.szProductName, info->productInfo.szProductNameCN, info->productInfo.szSize, info->productInfo.szICE, info->productInfo.bShowSugarLevel ? info->productInfo.szSugar : L"", info->productInfo.bShowHoneyLevel ? info->productInfo.szHoney : L"",
+					info->productInfo.szTopping, orderStatus);
+				if (gpDB->Execute(szSQL) == NULL)
+					return FALSE;
+				nIndex++;
+			}
+		}
+	}
+	return TRUE;
+}
+
+int GetCurOrderPayTimes()
+{
+	CAdoRecordSet RegSet;
+	RegSet.SetAdoConnection(gpDB);
+	RegSet.SetCursorLocation();
+	CString szSQL;
+	gpDB->BeginTrans();
+	szSQL.Format(_T("UPDATE y_order_list SET PayTimes = PayTimes + 1 WHERE OrderID = %d"), gCurSerialNO);
+	if (gpDB->Execute(szSQL) == NULL)
+	{
+		gpDB->RollbackTrans();
+		AddLog(gpDB, L"ERROR", szSQL, L"GetCurOrderPayTimes");
+		return -1;
+	}
+	szSQL.Format(_T("select PayTimes from y_order_list where OrderID = %d"), gCurSerialNO);
+	try {
+		if (!RegSet.Open(szSQL))
+		{
+			gpDB->RollbackTrans();
+			AddLog(gpDB, L"ERROR", szSQL, L"GetCurOrderPayTimes");
+			return -1;
+		}
+	}
+	catch (_com_error e)
+	{
+		gpDB->RollbackTrans();
+		AddLog(gpDB, L"ERROR", szSQL, L"GetCurOrderPayTimes");
+		return -1;
+	}
+	if (RegSet.IsEOF())
+	{
+		gpDB->RollbackTrans();
+		AddLog(gpDB, L"ERROR", szSQL, L"GetCurOrderPayTimes");
+		return -1;
+	}
+	int nTimes = 0;
+	RegSet.GetFieldValue((long)0, nTimes);
+	RegSet.Close();
+	gpDB->CommitTrans();
+	return nTimes;
+}
+BOOL UpdateOrderStatus(ORDERSTATUS orderStatus)
+{
+	CAdoRecordSet RegSet;
+	RegSet.SetAdoConnection(gpDB);
+	RegSet.SetCursorLocation();
+	CString szSQL;
+	gpDB->BeginTrans();
+	szSQL.Format(_T("UPDATE y_order_list SET OrderStatus = %d WHERE OrderID = %d and OrderDate = CURDATE()"), orderStatus,gCurSerialNO);
+	if (gpDB->Execute(szSQL) == NULL)
+	{
+		AddLog(gpDB, L"ERROR", szSQL, L"UpdateOrderStatus");
+		return FALSE;
+	}
+	return TRUE;
+}
+

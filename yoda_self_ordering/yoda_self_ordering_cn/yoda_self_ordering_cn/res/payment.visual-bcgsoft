@@ -61,7 +61,7 @@
 				<ID>
 					<VALUE>160</VALUE>
 				</ID>
-				<RECT>366, 36, 647, 111</RECT>
+				<RECT>366, 36, 502, 111</RECT>
 				<COLORS>
 					<TEXT_BRUSH>
 						<COLOR>246, 236, 191</COLOR>
@@ -74,7 +74,7 @@
 					<COLOR>0, 0, 0, 0</COLOR>
 				</BACK_OUTLINE>
 				<DRAW_FLAGS>2</DRAW_FLAGS>
-				<DATA_VALUE>TOTAL  $2.90</DATA_VALUE>
+				<DATA_VALUE>总计：</DATA_VALUE>
 				<TEXTFORMAT>
 					<FAMILY>Arial</FAMILY>
 					<SIZE>-36.000000</SIZE>
@@ -114,7 +114,7 @@
 			</ELEMENT>
 			<ELEMENT>
 				<ELEMENT_NAME>TextIndicator</ELEMENT_NAME>
-				<RECT>432, 253, 574, 283</RECT>
+				<RECT>293, 247, 435, 277</RECT>
 				<COLORS>
 					<TEXT_BRUSH>
 						<COLOR>255, 165, 0</COLOR>
@@ -139,7 +139,7 @@
 			</ELEMENT>
 			<ELEMENT>
 				<ELEMENT_NAME>TextIndicator</ELEMENT_NAME>
-				<RECT>432, 511, 574, 541</RECT>
+				<RECT>293, 527, 435, 557</RECT>
 				<COLORS>
 					<TEXT_BRUSH>
 						<COLOR>255, 165, 0</COLOR>
@@ -152,7 +152,7 @@
 					<COLOR>0, 0, 0, 0</COLOR>
 				</BACK_OUTLINE>
 				<DRAW_FLAGS>2</DRAW_FLAGS>
-				<DATA_VALUE>NETS</DATA_VALUE>
+				<DATA_VALUE>FLASHPAY</DATA_VALUE>
 				<TEXTFORMAT>
 					<FAMILY>Arial</FAMILY>
 					<SIZE>-24.000000</SIZE>
@@ -164,7 +164,7 @@
 			</ELEMENT>
 			<ELEMENT>
 				<ELEMENT_NAME>TextIndicator</ELEMENT_NAME>
-				<RECT>404, 771, 645, 801</RECT>
+				<RECT>257, 794, 498, 824</RECT>
 				<COLORS>
 					<TEXT_BRUSH>
 						<COLOR>255, 165, 0</COLOR>
@@ -192,21 +192,7 @@
 				<ID>
 					<VALUE>170</VALUE>
 				</ID>
-				<RECT>351, 335, 674, 445</RECT>
-				<BACK_BRUSH>
-					<COLOR>0, 0, 0, 0</COLOR>
-				</BACK_BRUSH>
-				<BACK_OUTLINE>
-					<COLOR>0, 0, 0, 0</COLOR>
-				</BACK_OUTLINE>
-				<DRAW_FLAGS>2</DRAW_FLAGS>
-			</ELEMENT>
-			<ELEMENT>
-				<ELEMENT_NAME>Image</ELEMENT_NAME>
-				<ID>
-					<VALUE>171</VALUE>
-				</ID>
-				<RECT>351, 587, 674, 746</RECT>
+				<RECT>212, 312, 535, 474</RECT>
 				<BACK_BRUSH>
 					<COLOR>0, 0, 0, 0</COLOR>
 				</BACK_BRUSH>
@@ -220,7 +206,7 @@
 				<ID>
 					<VALUE>172</VALUE>
 				</ID>
-				<RECT>392, 829, 628, 1007</RECT>
+				<RECT>212, 597, 535, 759</RECT>
 				<BACK_BRUSH>
 					<COLOR>0, 0, 0, 0</COLOR>
 				</BACK_BRUSH>
@@ -228,6 +214,126 @@
 					<COLOR>0, 0, 0, 0</COLOR>
 				</BACK_OUTLINE>
 				<DRAW_FLAGS>2</DRAW_FLAGS>
+			</ELEMENT>
+			<ELEMENT>
+				<ELEMENT_NAME>Image</ELEMENT_NAME>
+				<ID>
+					<VALUE>174</VALUE>
+				</ID>
+				<RECT>246, 852, 482, 1030</RECT>
+				<BACK_BRUSH>
+					<COLOR>0, 0, 0, 0</COLOR>
+				</BACK_BRUSH>
+				<BACK_OUTLINE>
+					<COLOR>0, 0, 0, 0</COLOR>
+				</BACK_OUTLINE>
+				<DRAW_FLAGS>2</DRAW_FLAGS>
+			</ELEMENT>
+			<ELEMENT>
+				<ELEMENT_NAME>TextIndicator</ELEMENT_NAME>
+				<RECT>725, 247, 867, 277</RECT>
+				<COLORS>
+					<TEXT_BRUSH>
+						<COLOR>255, 165, 0</COLOR>
+					</TEXT_BRUSH>
+				</COLORS>
+				<BACK_BRUSH>
+					<COLOR>0, 0, 0, 0</COLOR>
+				</BACK_BRUSH>
+				<BACK_OUTLINE>
+					<COLOR>0, 0, 0, 0</COLOR>
+				</BACK_OUTLINE>
+				<DRAW_FLAGS>2</DRAW_FLAGS>
+				<DATA_VALUE>NETS WARE</DATA_VALUE>
+				<TEXTFORMAT>
+					<FAMILY>Arial</FAMILY>
+					<SIZE>-24.000000</SIZE>
+					<WEIGHT>100</WEIGHT>
+					<LOCALE>en-US</LOCALE>
+					<ALIGN_HORZ>2</ALIGN_HORZ>
+					<ALIGN_VERT>2</ALIGN_VERT>
+				</TEXTFORMAT>
+			</ELEMENT>
+			<ELEMENT>
+				<ELEMENT_NAME>Image</ELEMENT_NAME>
+				<ID>
+					<VALUE>171</VALUE>
+				</ID>
+				<RECT>644, 316, 967, 478</RECT>
+				<BACK_BRUSH>
+					<COLOR>0, 0, 0, 0</COLOR>
+				</BACK_BRUSH>
+				<BACK_OUTLINE>
+					<COLOR>0, 0, 0, 0</COLOR>
+				</BACK_OUTLINE>
+				<DRAW_FLAGS>2</DRAW_FLAGS>
+			</ELEMENT>
+			<ELEMENT>
+				<ELEMENT_NAME>TextIndicator</ELEMENT_NAME>
+				<RECT>725, 527, 867, 557</RECT>
+				<COLORS>
+					<TEXT_BRUSH>
+						<COLOR>255, 165, 0</COLOR>
+					</TEXT_BRUSH>
+				</COLORS>
+				<BACK_BRUSH>
+					<COLOR>0, 0, 0, 0</COLOR>
+				</BACK_BRUSH>
+				<BACK_OUTLINE>
+					<COLOR>0, 0, 0, 0</COLOR>
+				</BACK_OUTLINE>
+				<DRAW_FLAGS>2</DRAW_FLAGS>
+				<DATA_VALUE>NETS QR</DATA_VALUE>
+				<TEXTFORMAT>
+					<FAMILY>Arial</FAMILY>
+					<SIZE>-24.000000</SIZE>
+					<WEIGHT>100</WEIGHT>
+					<LOCALE>en-US</LOCALE>
+					<ALIGN_HORZ>2</ALIGN_HORZ>
+					<ALIGN_VERT>2</ALIGN_VERT>
+				</TEXTFORMAT>
+			</ELEMENT>
+			<ELEMENT>
+				<ELEMENT_NAME>Image</ELEMENT_NAME>
+				<ID>
+					<VALUE>173</VALUE>
+				</ID>
+				<RECT>644, 597, 967, 759</RECT>
+				<BACK_BRUSH>
+					<COLOR>0, 0, 0, 0</COLOR>
+				</BACK_BRUSH>
+				<BACK_OUTLINE>
+					<COLOR>0, 0, 0, 0</COLOR>
+				</BACK_OUTLINE>
+				<DRAW_FLAGS>2</DRAW_FLAGS>
+			</ELEMENT>
+			<ELEMENT>
+				<ELEMENT_NAME>TextIndicator</ELEMENT_NAME>
+				<ID>
+					<VALUE>163</VALUE>
+				</ID>
+				<RECT>523, 36, 627, 111</RECT>
+				<COLORS>
+					<TEXT_BRUSH>
+						<COLOR>0, 0, 0</COLOR>
+					</TEXT_BRUSH>
+				</COLORS>
+				<BACK_BRUSH>
+					<COLOR>0, 0, 0, 0</COLOR>
+				</BACK_BRUSH>
+				<BACK_OUTLINE>
+					<COLOR>0, 0, 0, 0</COLOR>
+				</BACK_OUTLINE>
+				<DRAW_FLAGS>2</DRAW_FLAGS>
+				<DATA_VALUE>Sample Text</DATA_VALUE>
+				<TEXTFORMAT>
+					<FAMILY>Segoe UI</FAMILY>
+					<SIZE>-17.000000</SIZE>
+					<WEIGHT>700</WEIGHT>
+					<LOCALE>en-US</LOCALE>
+					<ALIGN_HORZ>2</ALIGN_HORZ>
+					<ALIGN_VERT>2</ALIGN_VERT>
+				</TEXTFORMAT>
 			</ELEMENT>
 		</ELEMENTS>
 	</CONTAINER>

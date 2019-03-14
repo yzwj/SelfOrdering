@@ -6,6 +6,7 @@
 #include "yoda_self_orderingView.h"
 #include "MainFrm.h"
 #include "TipInfo.h"
+
 CTipInfo* CTipInfo::c_pTip;
 UINT	gCurViewID;
 extern PRODUCTINFO gCurProduct;
@@ -99,7 +100,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 #endif
 	m_Tip.Create(this);
 	SetTimer(1001,1000,NULL);
-	SetTimer(1002, 60*1000, NULL);
+	//SetTimer(1002, 60*1000, NULL);
 	UpdateData(false);
 	// Menu will not take the focus on activation:
 	return 0;
@@ -219,6 +220,8 @@ LRESULT CMainFrame::OnCategroyView(WPARAM wp, LPARAM lp)
 LRESULT CMainFrame::OnHomeView(WPARAM wp, LPARAM lp)
 {
 	Cyoda_self_orderingView * pView = (Cyoda_self_orderingView*)GetActiveView();
+	if (glstOrder.GetSize() > 0)
+		glstOrder.RemoveAll();
 	pView->ShowView(ID_VIEW_HOME);
 	return LRESULT();
 }
@@ -248,7 +251,7 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 	if (IdleUIGetLastInputTime()>1)
 	{
 		int nIdleTime = (GetTickCount() - IdleUIGetLastInputTime()) / 1000;
-		if (nIdleTime>60)
+		if (nIdleTime>300)
 		{
 			if (gCurViewID != ID_VIEW_HOME)
 			{
@@ -259,7 +262,7 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 			
 		}
 	}
-	if (nIDEvent == 1002)
+	/*if (nIDEvent == 1002)
 	{
 		COleDateTime;
 		COleDateTime datetime;
@@ -276,6 +279,6 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 			KillTimer(1002);
 			ShouDown(GetVerInfo());
 		}
-	}
+	}*/
 	CFrameWnd::OnTimer(nIDEvent);
 }

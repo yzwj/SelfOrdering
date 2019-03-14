@@ -99,12 +99,13 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>D:\yoda src\BCGSoft25\BCGCBPro;LibQREncode;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\Flash;D:\yoda src\BCGSoft25\BCGCBPro;LibQREncode;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>D:\yoda src\BCGSoft25\Bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>strmiids.lib;quartz.lib;FlashDll.lib</AdditionalDependencies>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -152,7 +153,7 @@
       <MinimalRebuild>false</MinimalRebuild>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>D:\yoda src\BCGSoft25\BCGCBPro;LibQREncode;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\yoda src\BCGSoft25\BCGCBPro;LibQREncode;..\Flash;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -160,6 +161,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>false</GenerateDebugInformation>
       <AdditionalLibraryDirectories>D:\yoda src\BCGSoft25\Bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>strmiids.lib;quartz.lib;FlashDll.lib</AdditionalDependencies>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -208,7 +210,9 @@
     <ClInclude Include="Ado.h" />
     <ClInclude Include="AdoCommand.h" />
     <ClInclude Include="AdoRecordSet.h" />
+    <ClInclude Include="BitmapBtn.h" />
     <ClInclude Include="CashPop.h" />
+    <ClInclude Include="CDXGraph.h" />
     <ClInclude Include="HomePage.h" />
     <ClInclude Include="HoneyView.h" />
     <ClInclude Include="IceToppingView.h" />
@@ -232,11 +236,18 @@
     <ClInclude Include="LibQREncode\rscode.h" />
     <ClInclude Include="LibQREncode\split.h" />
     <ClInclude Include="MainFrm.h" />
+    <ClInclude Include="NETSGuideGif.h" />
+    <ClInclude Include="NETSLog.h" />
+    <ClInclude Include="NETSOperation.h" />
     <ClInclude Include="OrderView.h" />
+    <ClInclude Include="PaymentStatusDlg.h" />
     <ClInclude Include="PaymentView.h" />
+    <ClInclude Include="PictureEx.h" />
+    <ClInclude Include="PngButton.h" />
     <ClInclude Include="printerlibs.h" />
     <ClInclude Include="QRCodeDlg.h" />
     <ClInclude Include="Resource.h" />
+    <ClInclude Include="SerialPort.h" />
     <ClInclude Include="sizeToppingView.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="TeaView.h" />
@@ -251,7 +262,9 @@
     <ClCompile Include="Ado.cpp" />
     <ClCompile Include="AdoCommand.cpp" />
     <ClCompile Include="AdoRecordSet.cpp" />
+    <ClCompile Include="BitmapBtn.cpp" />
     <ClCompile Include="CashPop.cpp" />
+    <ClCompile Include="CDXGraph.cpp" />
     <ClCompile Include="HomePage.cpp" />
     <ClCompile Include="HoneyView.cpp" />
     <ClCompile Include="IceToppingView.cpp" />
@@ -309,9 +322,16 @@
       </PrecompiledHeader>
     </ClCompile>
     <ClCompile Include="MainFrm.cpp" />
+    <ClCompile Include="NETSGuideGif.cpp" />
+    <ClCompile Include="NETSLog.cpp" />
+    <ClCompile Include="NETSOperation.cpp" />
     <ClCompile Include="OrderView.cpp" />
+    <ClCompile Include="PaymentStatusDlg.cpp" />
     <ClCompile Include="PaymentView.cpp" />
+    <ClCompile Include="PictureEx.cpp" />
+    <ClCompile Include="PngButton.cpp" />
     <ClCompile Include="QRCodeDlg.cpp" />
+    <ClCompile Include="SerialPort.cpp" />
     <ClCompile Include="sizeToppingView.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -331,10 +351,12 @@
     <ResourceCompile Include="yoda_self_ordering.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="C:\Users\zhang\Desktop\NETS ECR 2 Spec v1.11\NETS ECR 2 Spec v1.11\NETS Payment logos\animation ICT250 GIF\ICT250 NETSFlashPay.gif" />
     <Image Include="resource\1.bmp" />
     <Image Include="resource\1.png" />
     <Image Include="resource\Ai Yu.png" />
     <Image Include="resource\Aleo Vera.png" />
+    <Image Include="resource\All Acceptance.png" />
     <Image Include="resource\arrow_back.png" />
     <Image Include="resource\arrow_next.png" />
     <Image Include="resource\BACK.png" />
@@ -349,11 +371,15 @@
     <Image Include="resource\counter.png" />
     <Image Include="resource\english.png" />
     <Image Include="resource\Filtered Ice with cup 64 x 64.png" />
+    <Image Include="resource\FlashPay.png" />
     <Image Include="resource\Grass Jelly.png" />
     <Image Include="resource\Green Apple Jelly.png" />
     <Image Include="resource\HOME.png" />
     <Image Include="resource\HomePage1.png" />
     <Image Include="resource\Ice Cream.png" />
+    <Image Include="resource\ICT250 NETS.gif" />
+    <Image Include="resource\ICT250 NETSFlashPay.gif" />
+    <Image Include="resource\ICT250 NETSQR.gif" />
     <Image Include="resource\iPay.png" />
     <Image Include="resource\Large cup 64x64.png" />
     <Image Include="resource\Large cup.png" />
@@ -366,6 +392,8 @@
     <Image Include="resource\More Ice with cup 64 x 64.png" />
     <Image Include="resource\More Ice.png" />
     <Image Include="resource\net.png" />
+    <Image Include="resource\NETS QR.png" />
+    <Image Include="resource\NETS.png" />
     <Image Include="resource\NEXT.png" />
     <Image Include="resource\Normal Ice Green.png" />
     <Image Include="resource\Normal Ice with cup 64 x 64.png" />
@@ -374,8 +402,12 @@
     <Image Include="resource\NOTOPPING.png" />
     <Image Include="resource\Oreo.png" />
     <Image Include="resource\PageBackground.png" />
+    <Image Include="resource\PayFailed.png" />
+    <Image Include="resource\pay_button.bmp" />
+    <Image Include="resource\pay_button_png.png" />
     <Image Include="resource\Red Beans.png" />
     <Image Include="resource\Room Temperature with cup 64 x 64.png" />
+    <Image Include="resource\Success.png" />
     <Image Include="resource\Tall cup 64x64.png" />
     <Image Include="resource\Tall cup.png" />
     <Image Include="resource\Warm with cup 64 x 64.png" />

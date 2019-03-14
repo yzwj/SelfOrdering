@@ -3,16 +3,7 @@
 
 
 #pragma once
-#define ID_VIEW_HOME					0
-#define ID_VIEW_CATEGORY				1
-#define ID_VIEW_PRODUCT					2
-#define ID_VIEW_ICE_SUGAR_TOPPING		3
-#define ID_VIEW_ICE_HONEY_TOPPING		4
-#define ID_VIEW_ICE_TOPPING				5
-#define ID_VIEW_SIZE_TOPPING			6
-#define ID_VIEW_TOPPING					7
-#define ID_VIEW_CHECK_ORDERING			8
-#define ID_VIEW_PAYMENT					9
+
 #include "yoda_self_orderingDoc.h"
 
 class CShowHomeContainerCtrl : public CBCGPVisualContainerCtrl
@@ -41,8 +32,8 @@ public:
 // Operations
 public:
 	void InitUITiles();
-	void InitCategroy();
-	void InitProduct();
+	BOOL InitCategroy();
+	BOOL InitProduct();
 	void CreateProduct(int nCategroy);
 	void CreateCategory();
 	void SetCurProduct(int nCategroy,int nProductID);

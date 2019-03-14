@@ -220,6 +220,7 @@
     <Image Include="resource\1.bmp" />
     <Image Include="resource\Ai Yu.png" />
     <Image Include="resource\Aleo Vera.png" />
+    <Image Include="resource\All Acceptance.png" />
     <Image Include="resource\arrow_back.png" />
     <Image Include="resource\arrow_next.png" />
     <Image Include="resource\Black Pearls.png" />
@@ -229,6 +230,7 @@
     <Image Include="resource\counter.png" />
     <Image Include="resource\english.png" />
     <Image Include="resource\Filtered Ice with cup 64 x 64.png" />
+    <Image Include="resource\FlashPay.png" />
     <Image Include="resource\Grass Jelly.png" />
     <Image Include="resource\Green Apple Jelly.png" />
     <Image Include="resource\HOME.png" />
@@ -243,11 +245,14 @@
     <Image Include="resource\Medium cup 64x64.png" />
     <Image Include="resource\More Ice with cup 64 x 64.png" />
     <Image Include="resource\NET.png" />
+    <Image Include="resource\NETS QR.png" />
+    <Image Include="resource\NETS.png" />
     <Image Include="resource\Normal Ice Green.png" />
     <Image Include="resource\Normal Ice with cup 64 x 64.png" />
     <Image Include="resource\Normal Ice.png" />
     <Image Include="resource\NOTOPPING.png" />
     <Image Include="resource\Oreo.png" />
+    <Image Include="resource\PayFailed.png" />
     <Image Include="resource\Red Beans.png" />
     <Image Include="resource\Room Temperature with cup 64 x 64.png" />
     <Image Include="resource\Tall cup 64x64.png" />

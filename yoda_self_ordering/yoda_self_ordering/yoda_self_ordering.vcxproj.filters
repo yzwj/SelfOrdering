@@ -147,6 +147,33 @@
     <ClInclude Include="LibQREncode\split.h">
       <Filter>Header Files\QRCode</Filter>
     </ClInclude>
+    <ClInclude Include="SerialPort.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="NETSGuideGif.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="CDXGraph.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PictureEx.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PaymentStatusDlg.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="NETSOperation.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="BitmapBtn.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PngButton.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="NETSLog.h">
+      <Filter>Source Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="yoda_self_ordering.cpp">
@@ -241,6 +268,33 @@
     </ClCompile>
     <ClCompile Include="LibQREncode\split.c">
       <Filter>Source Files\QRCode</Filter>
+    </ClCompile>
+    <ClCompile Include="SerialPort.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="NETSGuideGif.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="CDXGraph.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PictureEx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PaymentStatusDlg.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="NETSOperation.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="BitmapBtn.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PngButton.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="NETSLog.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -406,6 +460,42 @@
       <Filter>Resource Files</Filter>
     </Image>
     <Image Include="resource\english.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resource\FlashPay.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resource\NETS QR.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resource\NETS.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resource\ICT250 NETS.gif">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resource\ICT250 NETSFlashPay.gif">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resource\ICT250 NETSQR.gif">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="C:\Users\zhang\Desktop\NETS ECR 2 Spec v1.11\NETS ECR 2 Spec v1.11\NETS Payment logos\animation ICT250 GIF\ICT250 NETSFlashPay.gif">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resource\PayFailed.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resource\All Acceptance.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resource\Success.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resource\pay_button.bmp">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resource\pay_button_png.png">
       <Filter>Resource Files</Filter>
     </Image>
   </ItemGroup>

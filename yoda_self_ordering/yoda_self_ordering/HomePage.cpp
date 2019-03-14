@@ -1,5 +1,6 @@
 ﻿#include "stdafx.h"
 #include "yoda_self_ordering.h"
+#include "yoda_self_orderingView.h"
 #include "HomePage.h"
 #ifdef _DEBUG
 #undef THIS_FILE

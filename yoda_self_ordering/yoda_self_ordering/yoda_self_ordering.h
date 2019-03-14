@@ -12,6 +12,16 @@
 // Cyoda_self_orderingApp:
 // See yoda_self_ordering.cpp for the implementation of this class
 //
+#define ID_VIEW_HOME					0
+#define ID_VIEW_CATEGORY				1
+#define ID_VIEW_PRODUCT					2
+#define ID_VIEW_ICE_SUGAR_TOPPING		3
+#define ID_VIEW_ICE_HONEY_TOPPING		4
+#define ID_VIEW_ICE_TOPPING				5
+#define ID_VIEW_SIZE_TOPPING			6
+#define ID_VIEW_TOPPING					7
+#define ID_VIEW_CHECK_ORDERING			8
+#define ID_VIEW_PAYMENT					9
 typedef struct  Categroy_Info
 {
 	Categroy_Info()
@@ -106,7 +116,7 @@ typedef struct HeaderOrderInfo
 	HeaderOrderInfo()
 	{
 		//productInfo = NULL;
-		nOrderID = 1;
+		nOrderID = 0;
 		nProductCounts = 1;
 		bEdit = FALSE;
 	}
@@ -148,3 +158,7 @@ long getnewFreeID(CAdoConnection *pDB, const CString szTable, CString sColName);
 int	IsHaveSameID(CAdoConnection *pDB, CString sColName, CString sTableName, CString szValue);
 bool execSQL(CAdoConnection *pDB, CString &szSQL);
 BOOL GenerateQRCode(CString szText);
+BOOL ImageFromIDResource(UINT nID, LPCTSTR sTR, Image *&pImg);
+BOOL SaveOrder(ORDERSTATUS orderStatus);
+int GetCurOrderPayTimes();
+BOOL UpdateOrderStatus(ORDERSTATUS orderStatus);
