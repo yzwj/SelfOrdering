@@ -3,6 +3,7 @@
 #include <process.h>  
 #include <iostream>  
 #include <iomanip>
+#include "NETSLog.h"
 #define STX_INDEX 0
 #define LEN_INDEX 1
 #define ECN_INDEX 3
@@ -14,8 +15,50 @@
 #define NCK 0x15
 #define SEP 0x1C
 #define RFU 0x30 
-NETSLog gNETSLog;
 std::vector<MsgData>MsgList;
+int isspace(int x)
+{
+	if (x == ' ' || x == '\t' || x == '\n' || x == '\f' || x == '\b' || x == '\r')
+		return 1;
+	else
+		return 0;
+}
+int isdigit(int x)
+{
+	if (x <= '9'&&x >= '0')
+		return 1;
+	else
+		return 0;
+
+}
+int atoi_u(const unsigned char *nptr,int nlen)
+{
+	int c;              /* current char */
+	int total;         /* current total */
+	int sign;           /* if '-', then negative, otherwise positive */
+
+						/* skip whitespace */
+	while (isspace((int)(unsigned char)*nptr))
+		++nptr;
+
+	c = (int)(unsigned char)*nptr++;
+	sign = c;           /* save sign indication */
+	if (c == '-' || c == '+')
+		c = (int)(unsigned char)*nptr++;    /* skip sign */
+
+	total = 0;
+
+	while (isdigit(c) && nlen-->0) {
+		total = 10 * total + (c - '0');     /* accumulate digit */
+		c = (int)(unsigned char)*nptr++;    /* get next char */
+	}
+
+	if (sign == '-')
+		return -total;
+	else
+		return total;   /* return result, negated if necessary */
+}
+
 int strTobcd(unsigned char *dest, const char *src)
 {
 	int i;
@@ -29,7 +72,7 @@ int strTobcd(unsigned char *dest, const char *src)
 	}
 	return 0;
 }
-int BcdToAsc(char *pcBCD, char *pcASC, int iLength)
+int BcdToAsc(const char *pcBCD, unsigned char *pcASC, int iLength)
 {
 	int i;
 	for (i = 0; i<iLength; i++) {
@@ -51,28 +94,27 @@ int BcdToAsc(char *pcBCD, char *pcASC, int iLength)
 			pcASC[2 * i + 1] = ch + '0';
 		}
 	}
-	return atoi(pcASC);
+	return atoi_u(pcASC,i*2);
 }
 bool VerifyLRC(unsigned char * data)
 {
-	char bcdlen[8] = { 0 };
+	unsigned char bcdlen[8] = { 0 };
 	char len[2] = { 0 };
 	long  nlen;
 	len[0] = data[1];
 	len[1] = data[2];
 	nlen = BcdToAsc(len, bcdlen, 2);
-	data++;//0x02
-	data++;//len
-	data++;//len
 	BYTE LRC = 0x00;
-	for (int i = 0; i < nlen; i++)
+	int i = 1;
+	for (; i < nlen + 4; i++)
 	{
-		LRC ^= *data++;
+		LRC ^= data[i];
 	}
-	if (0x03 == *data++ && LRC == *data)
+	if (LRC == data[i])
 		return true;
 	return false;
 }
+
 /** 线程退出标志 */
 bool CSerialPort::s_bExit = false;
 /** 当串口无数据时,sleep至下次查询间隔的时间,单位:毫秒 */
@@ -86,6 +128,7 @@ CSerialPort::CSerialPort(void)
 	InitializeCriticalSection(&m_csCommunicationSync);
 	m_recvData = (unsigned char *)malloc(RECEIVED_DATA_DEFAULT_LENGHTH);
 	m_ResponseMsg = (char *)malloc(128);
+	m_bRecvFlag = NO_INIT_STATUS;
 }
 
 CSerialPort::~CSerialPort(void)
@@ -200,12 +243,36 @@ bool CSerialPort::InitPort(UINT portNo, const LPDCB& plDCB)
 void CSerialPort::ClosePort()
 {
 	/** 如果有串口被打开，关闭它 */
+	PurgeComm(m_hComm, PURGE_RXCLEAR | PURGE_TXCLEAR | PURGE_RXABORT | PURGE_TXABORT);
 	if (m_hComm != INVALID_HANDLE_VALUE)
 	{
 		CloseHandle(m_hComm);
 		m_hComm = INVALID_HANDLE_VALUE;
 	}
 	CloseListenTread();
+}
+
+bool CSerialPort::IsConn(UINT portNO)
+{
+	WCHAR szPort[50];
+	wsprintf(szPort, _T("\\\\.\\COM%d"), portNO);
+	/** 打开指定的串口 */
+	m_hComm = CreateFile(szPort,  /** 设备名,COM1,COM2等 */
+		GENERIC_READ | GENERIC_WRITE, /** 访问模式,可同时读写 */
+		0,                            /** 共享模式,0表示不共享 */
+		NULL,                         /** 安全性设置,一般使用NULL */
+		OPEN_EXISTING,                /** 该参数表示设备必须存在,否则创建失败 */
+		0,
+		0);
+
+	/** 如果打开失败，释放资源并返回 */
+	if (m_hComm == INVALID_HANDLE_VALUE)
+	{
+		return false;
+	}
+	CloseHandle(m_hComm);
+	m_hComm = INVALID_HANDLE_VALUE;
+	return true;
 }
 
 bool CSerialPort::openPort(UINT portNo)
@@ -317,7 +384,7 @@ UINT WINAPI CSerialPort::ListenThread(void* pParam)
 	/** 得到本类的指针 */
 	CSerialPort *pSerialPort = reinterpret_cast<CSerialPort*>(pParam);
 	unsigned char data[4096] = {0};
-	bool bWhole = true;
+	long  nRecvCounts = 0;
 	UINT nCounts = 0;
 	// 线程循环,轮询方式读取串口数据  
 	while (!pSerialPort->s_bExit)
@@ -326,6 +393,13 @@ UINT WINAPI CSerialPort::ListenThread(void* pParam)
 		/** 如果串口输入缓冲区中无数据,则休息一会再查询 */
 		if (BytesInQue == 0)
 		{
+			if (pSerialPort->m_bRecvFlag == INIT_STATUS && (GetTickCount() - pSerialPort->dwCountTimer) > 2000 && !pSerialPort->m_bReceived)
+			{
+				//NETSLog log;
+				//log.WriteStringToLog("No response");
+				//log.CloseLog();
+				pSerialPort->m_bRecvFlag = NO_RESPONSE_STATUS;
+			}
 			Sleep(SLEEP_TIME_INTERVAL);
 			pSerialPort->m_bReceived = FALSE;
 			continue;
@@ -339,54 +413,82 @@ UINT WINAPI CSerialPort::ListenThread(void* pParam)
 				if (*pSerialPort->m_recvData== 0x06)
 				{
 					pSerialPort->m_bRecvFlag = ACK_STATUS;
-					gNETSLog.WriteStringToLog("recv:ACK");
+					NETSLog log;
+					log.WriteStringToLog("recv:ACK");
+					log.CloseLog();
 					nCounts = 0;
 				}
 				else if (*pSerialPort->m_recvData == 0x015)
 				{
 					pSerialPort->m_bRecvFlag = NACK_STATUS;
-					gNETSLog.WriteStringToLog("recv:NACK");
+					NETSLog log;
+					log.WriteStringToLog("recv:NACK");
+					log.CloseLog();
 					nCounts = 0;
 				}
 				continue;
 			}
-			else if (BytesInQue > 1 && *pSerialPort->m_recvData == 0x06)
+			else if (BytesInQue > 1 && pSerialPort->m_recvData[0] == 0x06 )
 			{
 				pSerialPort->m_bRecvFlag = ACK_STATUS;
-				unsigned char sBuf[512] = { 0 };
-				memcpy(sBuf,data,BytesInQue);
-				memcpy(data, sBuf + 1, BytesInQue - 1);
-			}
-			pSerialPort->m_bReceived = TRUE;
-			if (bWhole)
-			{
-				memcpy(data, pSerialPort->m_recvData, BytesInQue);
-				nCounts += BytesInQue;
+				memcpy(data, pSerialPort->m_recvData+1, BytesInQue-1);
+				nCounts = BytesInQue - 1;
 			}
 			else
 			{
-				strncat_com(data, nCounts,pSerialPort->m_recvData,BytesInQue);
-				nCounts += BytesInQue;
-			}
-			
-			if (data[0] == 0x02)
-			{
-				char bcdlen[8] = { 0 };
-				char len[2] = { 0 };
-				long  nRecvCounts;
-				len[0] = data[1];
-				len[1] = data[2];
-				nRecvCounts = BcdToAsc(len, bcdlen, 2);
-				if (nRecvCounts + 5 != nCounts)
+				if (nCounts + BytesInQue >= nRecvCounts+5 && nRecvCounts != 0)
 				{
-					bWhole = FALSE;
-					continue;
+					strncat_com(data, nCounts, pSerialPort->m_recvData, nRecvCounts+5-nCounts);
+					nCounts = nRecvCounts + 5;
 				}
 				else
 				{
-					bWhole = TRUE;
-					nCounts = 0;
+					strncat_com(data, nCounts, pSerialPort->m_recvData, BytesInQue);
+					nCounts += BytesInQue;
 				}
+			}
+			pSerialPort->m_bReceived = TRUE;
+			if (data[0] == 0x02)
+			{
+				unsigned char bcdlen[8] = { 0 };
+				char len[2] = { 0 };
+				
+				len[0] = data[1];
+				len[1] = data[2];
+				nRecvCounts = BcdToAsc(len, bcdlen, 2);
+				if (nRecvCounts + 5 > nCounts)
+				{
+					continue;
+				}
+				else if (nRecvCounts + 5 < nCounts)
+				{
+					char *sBuf = (char*)malloc(nRecvCounts + 5 + 1);
+					memcpy(sBuf, data, nRecvCounts + 5);
+					memset(data, 0, 4096);
+					memcpy(data, sBuf, nRecvCounts + 5);
+					free(sBuf);
+					sBuf = NULL;
+				}
+				nCounts = 0;
+				if (VerifyLRC(data))
+				{
+					char ack = 0x06;
+					pSerialPort->WriteData(&ack, 1);
+					NETSLog log;
+					log.WriteStringToLog("Correct LRC/send ACK");
+					log.CloseLog();
+				}
+				else
+				{
+					NETSLog log;
+					log.WriteStringToLog("wrong LRC");
+					log.CloseLog();
+					char NACK = 0x15;
+					pSerialPort->WriteData(&NACK, 1);
+					continue;
+				}
+				
+				pSerialPort->m_bReceived = TRUE;
 				char ECN[12] = { 0 };
 				for (int i = 3; i < 15; i++)
 				{
@@ -396,8 +498,10 @@ UINT WINAPI CSerialPort::ListenThread(void* pParam)
 				sprintf_s(funcode, "%c%c", data[FUN_INDEX], data[FUN_INDEX + 1]);
 				if (!strcmp(funcode, "80"))//logon
 				{
-					gNETSLog.WriteStringToLog("recv:logon");
-					gNETSLog.WriteHexToLog((char*)data, nRecvCounts+5);
+					NETSLog log;
+					log.WriteStringToLog("recv:logon");
+					log.WriteHexToLog((char*)data, nRecvCounts+5);
+					log.CloseLog();
 					int index = BODY_INDEX;
 					int nlen = 0;
 					for (int j = index; j < nRecvCounts && index <= nRecvCounts; j++)
@@ -428,13 +532,14 @@ UINT WINAPI CSerialPort::ListenThread(void* pParam)
 						}
 					}
 					//returen 0x06
-					char ack = 0x06;
-					pSerialPort->WriteData(&ack, 1);
+					
 				}
 				if (!strcmp(funcode, "81"))//settlement
 				{
-					gNETSLog.WriteStringToLog("recv:settlement");
-					gNETSLog.WriteHexToLog((char*)data, nRecvCounts + 5);
+					NETSLog log;
+					log.WriteStringToLog("recv:settlement");
+					log.WriteHexToLog((char*)data, nRecvCounts + 5);
+					log.CloseLog();
 					int index = BODY_INDEX;
 					int nlen = 0;
 					for (int j = index; j < nRecvCounts && index <= nRecvCounts; j++)
@@ -465,8 +570,7 @@ UINT WINAPI CSerialPort::ListenThread(void* pParam)
 						}
 					}
 					//returen 0x06
-					char ack = 0x06;
-					pSerialPort->WriteData(&ack, 1);
+					
 				}
 				else if (!strcmp(funcode, "84"))//TMS
 				{
@@ -490,13 +594,28 @@ UINT WINAPI CSerialPort::ListenThread(void* pParam)
 					}
 					//returen 0x06
 					pSerialPort->m_bRecvFlag = TRANSACTION_COMPLATED_STATUS;
-					char ack = 0x06;
-					pSerialPort->WriteData(&ack, 1);
+					
 				}
 				else if (!strcmp(funcode, "24"))//flashpay
 				{
-					gNETSLog.WriteStringToLog("recv:flashpay");
-					gNETSLog.WriteHexToLog((char*)data, nRecvCounts + 5);
+					NETSLog log;
+					log.WriteStringToLog("recv:Flashpay");
+					log.WriteHexToLog((char*)data, nRecvCounts + 5);
+					log.CloseLog();
+					bool bFindLastApproved = false;
+					if (!strncmp(pSerialPort->m_lastApprovedFun, "56", 2))
+					{
+						bFindLastApproved = true;
+					}
+					if (bFindLastApproved)
+					{
+						if (!strncmp(ECN, pSerialPort->m_lastApprovedECN, 12))
+						{
+							pSerialPort->m_bRecvFlag = TRANSACTION_COMPLATED_STATUS;	
+						}
+						else pSerialPort->m_bRecvFlag = TRANSACTION_ERROR_STATUS;
+						continue;
+					}
 					int index = BODY_INDEX;
 					int nlen = 0;
 					for (int j = index; j < nRecvCounts && index <= nRecvCounts; j++)
@@ -609,13 +728,29 @@ UINT WINAPI CSerialPort::ListenThread(void* pParam)
 							index += 1;//0x1c
 						}
 					}
-					char ack = 0x06;
-					pSerialPort->WriteData(&ack, 1);
 				}
 				else if (!strcmp(funcode, "30"))//
 				{
-					gNETSLog.WriteStringToLog("recv:NETSDebit/QRCode");
-					gNETSLog.WriteHexToLog((char*)data, nRecvCounts + 5);
+					NETSLog log;
+					log.WriteStringToLog("recv:NETSDebit/QRCode");
+					log.WriteHexToLog((char*)data, nRecvCounts + 5);
+					log.CloseLog();
+					bool bFindLastApproved = false;
+					if (!strncmp(pSerialPort->m_lastApprovedFun, "56", 2))
+					{
+						bFindLastApproved = true;
+					}
+					if (bFindLastApproved)
+					{
+						if (!strncmp(ECN, pSerialPort->m_lastApprovedECN, 12))
+						{
+							pSerialPort->m_bRecvFlag = TRANSACTION_COMPLATED_STATUS;
+							
+						}
+						else pSerialPort->m_bRecvFlag = TRANSACTION_ERROR_STATUS;
+						continue;
+					}
+					
 					int index = BODY_INDEX;
 					int nlen = 0;
 					for (int j = index; j < nRecvCounts && index <= nRecvCounts; j++)
@@ -663,11 +798,13 @@ UINT WINAPI CSerialPort::ListenThread(void* pParam)
 							index += 1;//0x1c
 						}
 					}
-					char ack = 0x06;
-					pSerialPort->WriteData(&ack, 1);
 				}
 				else if (!strcmp(funcode, "56"))//Last Approved
 				{
+					NETSLog log;
+					log.WriteStringToLog("recv:LastApproved");
+					log.WriteHexToLog((char*)data, nRecvCounts + 5);
+					log.CloseLog();
 					int index = BODY_INDEX;
 					int nlen = 0;
 					for (int j = index; j < nRecvCounts && index <= nRecvCounts; j++)
@@ -681,9 +818,6 @@ UINT WINAPI CSerialPort::ListenThread(void* pParam)
 							len[1] = data[index++];
 							nlen = BcdToAsc(len, bcdlen, 2);
 							char sBuf[64] = { 0 };
-							int j = 0;
-							for (int i = index; i < index + nlen; i++, j++)
-								pSerialPort->m_lastApprovedFun[j]= data[i];
 						}
 						else if (data[index] == 'T' && data[index + 1] == 'D')
 						{
@@ -701,9 +835,13 @@ UINT WINAPI CSerialPort::ListenThread(void* pParam)
 						index += 1;//0x1c
 					}
 					pSerialPort->m_bRecvFlag = TRANSACTION_COMPLATED_STATUS;
-					char ack = 0x06;
-					pSerialPort->WriteData(&ack, 1);
+					
 				}
+			}
+			else
+			{
+				char NAck = 0x15 ;
+				pSerialPort->WriteData(&NAck, 1);
 			}
 		}
 	}
@@ -791,7 +929,7 @@ long CSerialPort::GetFuntionData(char* data, char* ECN, char* FunCode, char* ver
 			MsgData data = msgData[i];
 			length += 2;
 			length += 2;
-			char bcdlen[4] = { 0 };
+			unsigned char bcdlen[4] = { 0 };
 			int nLen = BcdToAsc(data.len, bcdlen, 2);
 			length += nLen;
 			length += 1;
@@ -814,7 +952,7 @@ long CSerialPort::GetFuntionData(char* data, char* ECN, char* FunCode, char* ver
 	*data++ = SEP;
 	if (msgData.size() > 0)
 	{
-		char bcdlen[4];
+		unsigned char bcdlen[4];
 		for (int i = 0; i < msgData.size(); i++)
 		{
 			MsgData msg = msgData[i];
@@ -849,25 +987,45 @@ RECV_STATUS CSerialPort::LogonNETS(char * ECN)
 {
 	char data[255] = { 0 };
 	m_curECN = ECN;
-	m_bRecvFlag = INIT_STATUS;
 	long length = GetFuntionData(data, ECN, "80", "01", MsgList);
-	gNETSLog.WriteStringToLog("Data sent:Logon");
-	gNETSLog.WriteHexToLog(data,length+1);
-	WriteData(data, length + 1);
+	strcpy(m_lastApprovedFun, "80");
+	NETSLog log;
+	log.WriteStringToLog("Data sent:Logon");
+	log.WriteHexToLog(data,length+1);
+	log.CloseLog();
+	m_bRecvFlag = INIT_STATUS;
+	dwCountTimer = GetTickCount();
+	if (!WriteData(data, length + 1))
+		return TRANSACTION_ERROR_STATUS;
 	int looptimes = 0;
 	int retrytimes = 2;
 	while (1)
 	{
-		if (m_bRecvFlag == NACK_STATUS && retrytimes > 0)
+		if ( m_bRecvFlag == NACK_STATUS && retrytimes > 0)
 		{
-			m_bRecvFlag = INIT_STATUS;
-			WriteData(data, length + 1);
+			NETSLog log;
+			log.WriteStringToLog("Data resent:Logon");
+			log.WriteHexToLog(data, length + 1);
+			log.CloseLog();
+			dwCountTimer = GetTickCount();
+			if (!WriteData(data, length + 1))
+				return TRANSACTION_ERROR_STATUS;
+			retrytimes--;
+		}
+		else if (m_bRecvFlag == NO_RESPONSE_STATUS && retrytimes > 0)
+		{
+			NETSLog log;
+			log.WriteStringToLog("Terminal no response.");
+			log.WriteStringToLog("Data resent:Logon");
+			log.WriteHexToLog(data, length + 1);
+			log.CloseLog();
+			dwCountTimer = GetTickCount();
+			if (!WriteData(data, length + 1))
+				return TRANSACTION_ERROR_STATUS;
 			retrytimes--;
 		}
 		else if (m_bRecvFlag == ACK_STATUS || m_bRecvFlag == INIT_STATUS)
 		{
-			if (m_bRecvFlag == INIT_STATUS && looptimes >= 1 && retrytimes >= 1)
-				m_bRecvFlag == NACK_STATUS;
 			Sleep(1000);
 			looptimes++;
 			if (looptimes >= 60)
@@ -875,6 +1033,13 @@ RECV_STATUS CSerialPort::LogonNETS(char * ECN)
 		}
 		else if (retrytimes == 0 && m_bRecvFlag == INIT_STATUS)
 			return TIME_OUT_STATUS;
+		else if (m_bRecvFlag == NO_RESPONSE_STATUS)
+		{
+			NETSLog log;
+			log.WriteStringToLog("Terminal no response.");
+			log.CloseLog();
+			return NO_RESPONSE_STATUS;
+		}
 		else return m_bRecvFlag;
 	}
 	return m_bRecvFlag;
@@ -882,28 +1047,47 @@ RECV_STATUS CSerialPort::LogonNETS(char * ECN)
 
 RECV_STATUS CSerialPort::SettlementNETS(char * ECN)
 {
-
 	char data[255] = { 0 };
 	m_curECN = ECN;
-	m_bRecvFlag = INIT_STATUS;
 	long length = GetFuntionData(data, ECN, "81", "01", MsgList);
-	gNETSLog.WriteStringToLog("Data sent:Logon");
-	gNETSLog.WriteHexToLog(data, length + 1);
-	WriteData(data, length + 1);
+	strcpy(m_lastApprovedFun, "81");
+	NETSLog log;
+	log.WriteStringToLog("Data sent:Settlement");
+	log.WriteHexToLog(data, length + 1);
+	log.CloseLog();
+	m_bRecvFlag = INIT_STATUS;
+	dwCountTimer = GetTickCount();
+	if (!WriteData(data, length + 1))
+		return TRANSACTION_ERROR_STATUS;
 	int looptimes = 0;
 	int retrytimes = 2;
 	while (1)
 	{
 		if (m_bRecvFlag == NACK_STATUS && retrytimes > 0)
 		{
-			m_bRecvFlag = INIT_STATUS;
-			WriteData(data, length + 1);
+			NETSLog log;
+			log.WriteStringToLog("Data resent:settlement");
+			log.WriteHexToLog(data, length + 1);
+			log.CloseLog();
+			dwCountTimer = GetTickCount();
+			if (!WriteData(data, length + 1))
+				return TRANSACTION_ERROR_STATUS;
+			retrytimes--;
+		}
+		else if (m_bRecvFlag == NO_RESPONSE_STATUS && retrytimes > 0)
+		{
+			NETSLog log;
+			log.WriteStringToLog("Terminal no response.");
+			log.WriteStringToLog("Data resent:settlement");
+			log.WriteHexToLog(data, length + 1);
+			log.CloseLog();
+			dwCountTimer = GetTickCount();
+			if (!WriteData(data, length + 1))
+				return TRANSACTION_ERROR_STATUS;
 			retrytimes--;
 		}
 		else if (m_bRecvFlag == ACK_STATUS || m_bRecvFlag == INIT_STATUS)
 		{
-			if (m_bRecvFlag == INIT_STATUS && looptimes >= 1 && retrytimes >= 1)
-				m_bRecvFlag == NACK_STATUS;
 			Sleep(1000);
 			looptimes++;
 			if (looptimes >= 60)
@@ -911,6 +1095,13 @@ RECV_STATUS CSerialPort::SettlementNETS(char * ECN)
 		}
 		else if (retrytimes == 0 && m_bRecvFlag == INIT_STATUS)
 			return TIME_OUT_STATUS;
+		else if (m_bRecvFlag == NO_RESPONSE_STATUS)
+		{
+			NETSLog log;
+			log.WriteStringToLog("Terminal no response.");
+			log.CloseLog();
+			return NO_RESPONSE_STATUS;
+		}
 		else return m_bRecvFlag;
 	}
 	return m_bRecvFlag;
@@ -920,7 +1111,6 @@ RECV_STATUS CSerialPort::TransactionNETSDebit(char* ECN, float Amounts)
 {
 	MsgList.clear();
 	m_curECN = ECN;
-	m_bRecvFlag = INIT_STATUS;
 	char data[255] = { 0 };
 	int amount_i = Amounts * 100;
 	MsgData Transmsg, loyaltymsg, TransAmountMsg;
@@ -959,30 +1149,58 @@ RECV_STATUS CSerialPort::TransactionNETSDebit(char* ECN, float Amounts)
 	TransAmountMsg.sep[0] = 0x1C;
 	MsgList.push_back(TransAmountMsg);
 	long length = GetFuntionData(data, ECN, "30", "01", MsgList);
-	gNETSLog.WriteStringToLog("Data sent:NETSDebit");
-	gNETSLog.WriteHexToLog(data, length + 1);
-	WriteData(data, length + 1);
+	strcpy(m_lastApprovedFun, "30");
+	NETSLog log;
+	log.WriteStringToLog("Data sent:NETSDebit");
+	log.WriteHexToLog(data, length + 1);
+	log.CloseLog();
+	m_bRecvFlag = INIT_STATUS;
+	dwCountTimer = GetTickCount();
+	if(!WriteData(data, length + 1))
+		return TRANSACTION_ERROR_STATUS;
 	int looptimes = 0;
 	int retrytimes = 2;
 	while (1)
 	{
 		if (m_bRecvFlag == NACK_STATUS && retrytimes > 0)
 		{
-			m_bRecvFlag = INIT_STATUS;
-			WriteData(data, length + 1);
+			NETSLog log;
+			log.WriteStringToLog("Data resent:NETSDebit");
+			log.WriteHexToLog(data, length + 1);
+			log.CloseLog();
+			dwCountTimer = GetTickCount();
+			if (!WriteData(data, length + 1))
+				return TRANSACTION_ERROR_STATUS;
+			retrytimes--;
+		}
+		else if (m_bRecvFlag == NO_RESPONSE_STATUS && retrytimes > 0)
+		{
+			NETSLog log;
+			log.WriteStringToLog("Terminal no response.");
+			log.WriteStringToLog("Data resent:NETDebit");
+			log.WriteHexToLog(data, length + 1);
+			log.CloseLog();
+			dwCountTimer = GetTickCount();
+			if (!WriteData(data, length + 1))
+				return TRANSACTION_ERROR_STATUS;
 			retrytimes--;
 		}
 		else if (m_bRecvFlag == ACK_STATUS || m_bRecvFlag == INIT_STATUS)
 		{
-			if (m_bRecvFlag == INIT_STATUS && looptimes >= 1 && retrytimes>=1)
-				m_bRecvFlag == NACK_STATUS;
 			Sleep(1000);
 			looptimes++;
-			if (looptimes >= 120)
+			if (looptimes >= 60)
 				return TIME_OUT_STATUS;
 		}
-		else if(retrytimes == 0 && m_bRecvFlag == INIT_STATUS)
+		else if (retrytimes == 0 && m_bRecvFlag == INIT_STATUS)
 			return TIME_OUT_STATUS;
+		else if (m_bRecvFlag == NO_RESPONSE_STATUS)
+		{
+			NETSLog log;
+			log.WriteStringToLog("Terminal no response.");
+			log.CloseLog();
+			return NO_RESPONSE_STATUS;
+		}
 		else return m_bRecvFlag;
 	}
 	return m_bRecvFlag;
@@ -992,7 +1210,7 @@ RECV_STATUS CSerialPort::TransactionNETSQRCode(char* ECN, float Amounts)
 {
 	MsgList.clear();
 	m_curECN = ECN;
-	m_bRecvFlag = INIT_STATUS;
+	
 	char data[255] = { 0 };
 	int amount_i = Amounts * 100;
 	MsgData Transmsg, loyaltymsg, TransAmountMsg;
@@ -1031,23 +1249,44 @@ RECV_STATUS CSerialPort::TransactionNETSQRCode(char* ECN, float Amounts)
 	TransAmountMsg.sep[0] = 0x1C;
 	MsgList.push_back(TransAmountMsg);
 	long length = GetFuntionData(data, ECN, "30", "01", MsgList);
-	gNETSLog.WriteStringToLog("Data sent:NETSQRCode");
-	gNETSLog.WriteHexToLog(data, length + 1);
-	WriteData(data, length + 1);
+	strcpy(m_lastApprovedFun, "30");
+	NETSLog log;
+	log.WriteStringToLog("Data sent:NETSQRCode");
+	log.WriteHexToLog(data, length + 1);
+	log.CloseLog();
+	m_bRecvFlag = INIT_STATUS;
+	dwCountTimer = GetTickCount();
+	if (!WriteData(data, length + 1))
+		return TRANSACTION_ERROR_STATUS;
 	int looptimes = 0;
 	int retrytimes = 2;
 	while (1)
 	{
 		if (m_bRecvFlag == NACK_STATUS && retrytimes > 0)
 		{
-			m_bRecvFlag = INIT_STATUS;
-			WriteData(data, length + 1);
+			NETSLog log;
+			log.WriteStringToLog("Data resent:NETSQRCode");
+			log.WriteHexToLog(data, length + 1);
+			log.CloseLog();
+			dwCountTimer = GetTickCount();
+			if (!WriteData(data, length + 1))
+				return TRANSACTION_ERROR_STATUS;
+			retrytimes--;
+		}
+		else if (m_bRecvFlag == NO_RESPONSE_STATUS && retrytimes > 0)
+		{
+			NETSLog log;
+			log.WriteStringToLog("Terminal no response.");
+			log.WriteStringToLog("Data resent:NETSQRCode");
+			log.WriteHexToLog(data, length + 1);
+			log.CloseLog();
+			dwCountTimer = GetTickCount();
+			if (!WriteData(data, length + 1))
+				return TRANSACTION_ERROR_STATUS;
 			retrytimes--;
 		}
 		else if (m_bRecvFlag == ACK_STATUS || m_bRecvFlag == INIT_STATUS)
 		{
-			if (m_bRecvFlag == INIT_STATUS && looptimes >= 1 && retrytimes >= 1)
-				m_bRecvFlag == NACK_STATUS;
 			Sleep(1000);
 			looptimes++;
 			if (looptimes >= 120)
@@ -1055,6 +1294,13 @@ RECV_STATUS CSerialPort::TransactionNETSQRCode(char* ECN, float Amounts)
 		}
 		else if (retrytimes == 0 && m_bRecvFlag == INIT_STATUS)
 			return TIME_OUT_STATUS;
+		else if (m_bRecvFlag == NO_RESPONSE_STATUS)
+		{
+			NETSLog log;
+			log.WriteStringToLog("Terminal no response.");
+			log.CloseLog();
+			return NO_RESPONSE_STATUS;
+		}
 		else return m_bRecvFlag;
 	}
 	return m_bRecvFlag;
@@ -1064,12 +1310,12 @@ RECV_STATUS CSerialPort::TransactionNETSFlashPay(char* ECN, float Amounts)
 {
 	MsgList.clear();
 	m_curECN = ECN;
-	m_bRecvFlag = INIT_STATUS;
 	char data[255] = { 0 };
 	int amount_i = Amounts * 100;
 	MsgData msg;
 	msg.FieldCode[0] = '4';
 	msg.FieldCode[1] = '0';
+	
 	char slen[16];
 	sprintf_s(slen, "%04d", 12);
 	unsigned char dest[2];
@@ -1082,26 +1328,44 @@ RECV_STATUS CSerialPort::TransactionNETSFlashPay(char* ECN, float Amounts)
 	msg.sep[0] = 0x1c;
 	MsgList.push_back(msg);
 	long length = GetFuntionData(data, ECN, "24", "01", MsgList);
-	gNETSLog.WriteStringToLog("Data sent:NETSFlashPay");
-	gNETSLog.WriteHexToLog(data, length + 1);
-	if (WriteData(data, length + 1))
-	{
-		printf("Write Data Successful");
-	}
+	strcpy(m_lastApprovedFun, "24");
+	NETSLog log;
+	log.WriteStringToLog("Data sent:NETSFlashPay");
+	log.WriteHexToLog(data, length + 1);
+	log.CloseLog();
+	m_bRecvFlag = INIT_STATUS;
+	dwCountTimer = GetTickCount();
+	if (!WriteData(data, length + 1))
+		return TRANSACTION_ERROR_STATUS;
 	int looptimes = 0;
 	int retrytimes = 2;
 	while (1)
 	{
 		if (m_bRecvFlag == NACK_STATUS && retrytimes > 0)
 		{
-			m_bRecvFlag = INIT_STATUS;
-			WriteData(data, length + 1);
+			NETSLog log;
+			log.WriteStringToLog("Data resent:NETSFlashPay");
+			log.WriteHexToLog(data, length + 1);
+			log.CloseLog();
+			dwCountTimer = GetTickCount();
+			if (!WriteData(data, length + 1))
+				return TRANSACTION_ERROR_STATUS;
+			retrytimes--;
+		}
+		else if (m_bRecvFlag == NO_RESPONSE_STATUS && retrytimes > 0)
+		{
+			NETSLog log;
+			log.WriteStringToLog("Terminal no response.");
+			log.WriteStringToLog("Data resent:NETSFlashPay");
+			log.WriteHexToLog(data, length + 1);
+			log.CloseLog();
+			dwCountTimer = GetTickCount();
+			if (!WriteData(data, length + 1))
+				return TRANSACTION_ERROR_STATUS;
 			retrytimes--;
 		}
 		else if (m_bRecvFlag == ACK_STATUS || m_bRecvFlag == INIT_STATUS)
 		{
-			if (m_bRecvFlag == INIT_STATUS && looptimes >= 1 && retrytimes >= 1)
-				m_bRecvFlag == NACK_STATUS;
 			Sleep(1000);
 			looptimes++;
 			if (looptimes >= 60)
@@ -1109,36 +1373,61 @@ RECV_STATUS CSerialPort::TransactionNETSFlashPay(char* ECN, float Amounts)
 		}
 		else if (retrytimes == 0 && m_bRecvFlag == INIT_STATUS)
 			return TIME_OUT_STATUS;
+		else if (m_bRecvFlag == NO_RESPONSE_STATUS)
+		{
+			NETSLog log;
+			log.WriteStringToLog("Terminal no response.");
+			log.CloseLog();
+			return NO_RESPONSE_STATUS;
+		}
 		else return m_bRecvFlag;
 	}
 	return m_bRecvFlag;
 }
 RECV_STATUS CSerialPort::GetLastApproved(char* ECN)
 {
+	MsgList.clear();
 	char data[255] = { 0 };
 	m_curECN = ECN;
-	m_bRecvFlag = INIT_STATUS;
 	long length = GetFuntionData(data, ECN, "56", "01", MsgList);
-	gNETSLog.WriteStringToLog("Data sent:Logon");
-	gNETSLog.WriteHexToLog(data, length + 1);
-	if (WriteData(data, length + 1))
-	{
-		printf("Write Data Successful");
-	}
+	strcpy(m_lastApprovedFun,"56");
+	NETSLog log;
+	log.WriteStringToLog("Data sent:GetLastApproved");
+	log.WriteHexToLog(data, length + 1);
+	log.CloseLog();
+	m_bRecvFlag = INIT_STATUS;
+	dwCountTimer = GetTickCount();
+	if (!WriteData(data, length + 1))
+		return TRANSACTION_ERROR_STATUS;
 	int looptimes = 0;
 	int retrytimes = 2;
 	while (1)
 	{
 		if (m_bRecvFlag == NACK_STATUS && retrytimes > 0)
 		{
-			m_bRecvFlag = INIT_STATUS;
-			WriteData(data, length + 1);
+			NETSLog log;
+			log.WriteStringToLog("Data resent:GetLastApproved");
+			log.WriteHexToLog(data, length + 1);
+			log.CloseLog();
+			dwCountTimer = GetTickCount();
+			if (!WriteData(data, length + 1))
+				return TRANSACTION_ERROR_STATUS;
+			retrytimes--;
+		}
+		else if (m_bRecvFlag == NO_RESPONSE_STATUS && retrytimes > 0)
+		{
+			NETSLog log;
+			log.WriteStringToLog("Terminal no response.");
+			log.WriteStringToLog("Data resent:GetLastApproved");
+			log.WriteHexToLog(data, length + 1);
+			log.CloseLog();
+			dwCountTimer = GetTickCount();
+			if (!WriteData(data, length + 1))
+				return TRANSACTION_ERROR_STATUS;
 			retrytimes--;
 		}
 		else if (m_bRecvFlag == ACK_STATUS || m_bRecvFlag == INIT_STATUS)
 		{
-			if (m_bRecvFlag == INIT_STATUS && looptimes >= 1 && retrytimes >= 1)
-				m_bRecvFlag == NACK_STATUS;
 			Sleep(1000);
 			looptimes++;
 			if (looptimes >= 60)
@@ -1146,33 +1435,39 @@ RECV_STATUS CSerialPort::GetLastApproved(char* ECN)
 		}
 		else if (retrytimes == 0 && m_bRecvFlag == INIT_STATUS)
 			return TIME_OUT_STATUS;
-		else
+		else if (m_bRecvFlag == NO_RESPONSE_STATUS)
 		{
-			return m_bRecvFlag;
+			NETSLog log;
+			log.WriteStringToLog("Terminal no response.");
+			log.CloseLog();
+			return NO_RESPONSE_STATUS;
 		}
+		else return m_bRecvFlag;
 	}
 	return m_bRecvFlag;
 }
 RECV_STATUS CSerialPort::TMS()
 {
 	char data[255] = { 0 };
-	m_bRecvFlag = INIT_STATUS;
 	long length = GetFuntionData(data, "000000000001", "84", "01", MsgList);
-	WriteData(data, length + 1);
+	m_bRecvFlag = INIT_STATUS;
+	dwCountTimer = GetTickCount();
+	if (!WriteData(data, length + 1))
+		return TRANSACTION_ERROR_STATUS;
 	int looptimes = 0;
 	int retrytimes = 2;
 	while (1)
 	{
-		if (m_bRecvFlag == NACK_STATUS && retrytimes > 0)
+		if ((m_bRecvFlag == NACK_STATUS || m_bRecvFlag == NO_RESPONSE_STATUS) && retrytimes > 0)
 		{
-			m_bRecvFlag = INIT_STATUS;
-			WriteData(data, length + 1);
+			//m_bRecvFlag = INIT_STATUS;
+			dwCountTimer = GetTickCount();
+			if (!WriteData(data, length + 1))
+				return TRANSACTION_ERROR_STATUS;
 			retrytimes--;
 		}
 		else if (m_bRecvFlag == ACK_STATUS || m_bRecvFlag == INIT_STATUS)
 		{
-			if (m_bRecvFlag == INIT_STATUS && looptimes >= 1 && retrytimes >= 1)
-				m_bRecvFlag == NACK_STATUS;
 			Sleep(1000);
 			looptimes++;
 			if (looptimes >= 60)
@@ -1187,3 +1482,4 @@ RECV_STATUS CSerialPort::TMS()
 	}
 	return m_bRecvFlag;
 }
+

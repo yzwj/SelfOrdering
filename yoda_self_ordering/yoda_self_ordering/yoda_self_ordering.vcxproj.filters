@@ -19,6 +19,9 @@
     <Filter Include="Header Files\QRCode">
       <UniqueIdentifier>{db0fca39-564c-4b63-8c10-d1a7faf8c4e6}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\API">
+      <UniqueIdentifier>{ea20fe71-e940-4283-8885-ab06364c79bf}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="ReadMe.txt" />
@@ -174,6 +177,15 @@
     <ClInclude Include="NETSLog.h">
       <Filter>Source Files</Filter>
     </ClInclude>
+    <ClInclude Include="VoucherList.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="HttpClient.h">
+      <Filter>Source Files\API</Filter>
+    </ClInclude>
+    <ClInclude Include="json_tool.h">
+      <Filter>Source Files\API</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="yoda_self_ordering.cpp">
@@ -295,6 +307,21 @@
     </ClCompile>
     <ClCompile Include="NETSLog.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="VoucherList.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="HttpClient.cpp">
+      <Filter>Source Files\API</Filter>
+    </ClCompile>
+    <ClCompile Include="json_reader.cpp">
+      <Filter>Source Files\API</Filter>
+    </ClCompile>
+    <ClCompile Include="json_value.cpp">
+      <Filter>Source Files\API</Filter>
+    </ClCompile>
+    <ClCompile Include="json_writer.cpp">
+      <Filter>Source Files\API</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -498,6 +525,39 @@
     <Image Include="resource\pay_button_png.png">
       <Filter>Resource Files</Filter>
     </Image>
+    <Image Include="resource\PayCapButton.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resource\pay.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resource\voucher.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resource\FlashPay - Disable.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resource\NETS QR - Disable.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resource\NETS-Disable.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resource\voucherIcon.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resource\counter_disable.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resource\iPay_Disable.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resource\Free.png">
+      <Filter>Resource Files</Filter>
+    </Image>
+    <Image Include="resource\Free_disable.png">
+      <Filter>Resource Files</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="res\yoda_self_ordering.rc2">
@@ -518,5 +578,8 @@
     <None Include="res\onlyTopping.visual-bcgsoft" />
     <None Include="res\payment.visual-bcgsoft" />
     <None Include="res\HomePage.visual-bcgsoft" />
+    <None Include="json_valueiterator.inl">
+      <Filter>Source Files\API</Filter>
+    </None>
   </ItemGroup>
 </Project>

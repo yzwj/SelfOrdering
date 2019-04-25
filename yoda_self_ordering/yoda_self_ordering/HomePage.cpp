@@ -2,13 +2,14 @@
 #include "yoda_self_ordering.h"
 #include "yoda_self_orderingView.h"
 #include "HomePage.h"
+#include "VoucherList.h"
 #ifdef _DEBUG
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #define new DEBUG_NEW
 #endif
 #include "TipInfo.h"
-
+extern int gCurSerialNO;
 BOOL gbChinese;
 #define ID_IMAGE_ADVERTISING			160
 #define ID_IMAGE_LANGUAGE				161
@@ -94,9 +95,14 @@ BOOL CHomeContainerCtrl::OnMouseDown(int nButton, const CBCGPPoint& pt)
 			{
 				//CTipInfo::c_pTip->ShowFloatWindow(this);
 				//::PostMessage(AfxGetMainWnd()->m_hWnd, ID_SHOWTOOLTIP, IDS_TIP_MAX_TOPPING, 0);
+				CVoucherList* voucher = new CVoucherList();
+				voucher->Create(IDD_DIALOG_VOUCHERS);
+				voucher->ShowWindow(SW_SHOWNORMAL);
 			}
 			else if (pImage->GetID() == ID_IMAGE_ORDER)
 			{
+				if(gCurSerialNO == 0)
+					gCurSerialNO = getnewFreeID(gpDB, _T("y_order_list"), _T("OrderID"));
 				::PostMessage(AfxGetMainWnd()->m_hWnd, WM_CLICK_HOME, 0, 0);
 			}
 		}

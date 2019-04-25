@@ -99,13 +99,13 @@
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <PreprocessorDefinitions>WIN32;_WINDOWS;_DEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>..\Flash;D:\yoda src\BCGSoft25\BCGCBPro;LibQREncode;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\yoda src\BCGSoft25\BCGCBPro;LibQREncode;D:\yoda src\jsoncpp-master\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>D:\yoda src\BCGSoft25\Bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>strmiids.lib;quartz.lib;FlashDll.lib</AdditionalDependencies>
+      <AdditionalDependencies>strmiids.lib;quartz.lib;</AdditionalDependencies>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -146,22 +146,23 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <PrecompiledHeader>Use</PrecompiledHeader>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Disabled</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <IntrinsicFunctions>false</IntrinsicFunctions>
       <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
       <MinimalRebuild>false</MinimalRebuild>
-      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
       <PreprocessorDefinitions>WIN32;_WINDOWS;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>D:\yoda src\BCGSoft25\BCGCBPro;LibQREncode;..\Flash;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>D:\yoda src\BCGSoft25\BCGCBPro;LibQREncode;D:\yoda src\jsoncpp-master\include\;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <GenerateDebugInformation>false</GenerateDebugInformation>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>D:\yoda src\BCGSoft25\Bin;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
-      <AdditionalDependencies>strmiids.lib;quartz.lib;FlashDll.lib</AdditionalDependencies>
+      <AdditionalDependencies>strmiids.lib;quartz.lib;</AdditionalDependencies>
     </Link>
     <Midl>
       <MkTypLibCompatible>false</MkTypLibCompatible>
@@ -215,8 +216,10 @@
     <ClInclude Include="CDXGraph.h" />
     <ClInclude Include="HomePage.h" />
     <ClInclude Include="HoneyView.h" />
+    <ClInclude Include="HttpClient.h" />
     <ClInclude Include="IceToppingView.h" />
     <ClInclude Include="ItemTile.h" />
+    <ClInclude Include="json_tool.h" />
     <ClInclude Include="LibQREncode\bitstream.h" />
     <ClInclude Include="LibQREncode\config.h" />
     <ClInclude Include="LibQREncode\mask.h" />
@@ -253,6 +256,7 @@
     <ClInclude Include="TeaView.h" />
     <ClInclude Include="TipInfo.h" />
     <ClInclude Include="ToppingView.h" />
+    <ClInclude Include="VoucherList.h" />
     <ClInclude Include="XInfoTip.h" />
     <ClInclude Include="yoda_self_ordering.h" />
     <ClInclude Include="yoda_self_orderingDoc.h" />
@@ -267,8 +271,12 @@
     <ClCompile Include="CDXGraph.cpp" />
     <ClCompile Include="HomePage.cpp" />
     <ClCompile Include="HoneyView.cpp" />
+    <ClCompile Include="HttpClient.cpp" />
     <ClCompile Include="IceToppingView.cpp" />
     <ClCompile Include="ItemTile.cpp" />
+    <ClCompile Include="json_reader.cpp" />
+    <ClCompile Include="json_value.cpp" />
+    <ClCompile Include="json_writer.cpp" />
     <ClCompile Include="LibQREncode\bitstream.c">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </PrecompiledHeader>
@@ -342,6 +350,7 @@
     <ClCompile Include="TeaView.cpp" />
     <ClCompile Include="TipInfo.cpp" />
     <ClCompile Include="ToppingView.cpp" />
+    <ClCompile Include="VoucherList.cpp" />
     <ClCompile Include="XInfoTip.cpp" />
     <ClCompile Include="yoda_self_ordering.cpp" />
     <ClCompile Include="yoda_self_orderingDoc.cpp" />
@@ -369,9 +378,13 @@
     <Image Include="resource\Coconut Jelly.png" />
     <Image Include="resource\Continue Order.bmp" />
     <Image Include="resource\counter.png" />
+    <Image Include="resource\counter_disable.png" />
     <Image Include="resource\english.png" />
     <Image Include="resource\Filtered Ice with cup 64 x 64.png" />
+    <Image Include="resource\FlashPay - Disable.png" />
     <Image Include="resource\FlashPay.png" />
+    <Image Include="resource\Free.png" />
+    <Image Include="resource\Free_disable.png" />
     <Image Include="resource\Grass Jelly.png" />
     <Image Include="resource\Green Apple Jelly.png" />
     <Image Include="resource\HOME.png" />
@@ -381,6 +394,7 @@
     <Image Include="resource\ICT250 NETSFlashPay.gif" />
     <Image Include="resource\ICT250 NETSQR.gif" />
     <Image Include="resource\iPay.png" />
+    <Image Include="resource\iPay_Disable.png" />
     <Image Include="resource\Large cup 64x64.png" />
     <Image Include="resource\Large cup.png" />
     <Image Include="resource\Less Ice with cup 64 x 64.png" />
@@ -392,7 +406,9 @@
     <Image Include="resource\More Ice with cup 64 x 64.png" />
     <Image Include="resource\More Ice.png" />
     <Image Include="resource\net.png" />
+    <Image Include="resource\NETS QR - Disable.png" />
     <Image Include="resource\NETS QR.png" />
+    <Image Include="resource\NETS-Disable.png" />
     <Image Include="resource\NETS.png" />
     <Image Include="resource\NEXT.png" />
     <Image Include="resource\Normal Ice Green.png" />
@@ -402,6 +418,8 @@
     <Image Include="resource\NOTOPPING.png" />
     <Image Include="resource\Oreo.png" />
     <Image Include="resource\PageBackground.png" />
+    <Image Include="resource\pay.png" />
+    <Image Include="resource\PayCapButton.png" />
     <Image Include="resource\PayFailed.png" />
     <Image Include="resource\pay_button.bmp" />
     <Image Include="resource\pay_button_png.png" />
@@ -410,6 +428,8 @@
     <Image Include="resource\Success.png" />
     <Image Include="resource\Tall cup 64x64.png" />
     <Image Include="resource\Tall cup.png" />
+    <Image Include="resource\voucher.png" />
+    <Image Include="resource\voucherIcon.png" />
     <Image Include="resource\Warm with cup 64 x 64.png" />
     <Image Include="resource\White Pearls.png" />
     <Image Include="res\Toolbar.bmp" />
@@ -418,6 +438,7 @@
     <Image Include="UserImages.png" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="json_valueiterator.inl" />
     <None Include="res\bcgp_vis.bin" />
     <None Include="res\HomePage.visual-bcgsoft" />
     <None Include="res\ice&amp;honey&amp;topping.visual-bcgsoft" />

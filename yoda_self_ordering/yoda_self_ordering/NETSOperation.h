@@ -33,4 +33,5 @@ public:
 	CStatic m_staticDesc;
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 	afx_msg void OnClose();
+	afx_msg void OnBnClickedClose();
 };

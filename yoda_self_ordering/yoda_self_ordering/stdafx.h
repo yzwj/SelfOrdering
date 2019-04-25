@@ -52,18 +52,25 @@
 #include <BCGCBProInc.h>			// BCGPro Control Bar
 #include <afxcontrolbars.h>
 #include "Ado.h"
-#include "NETSLog.h"
+extern UINT WM_SCAN_MESSAGE;
+extern UINT WM_CLOSE_SON;
+
 extern CAdoConnection	*gpDB;
 extern CString gIniFile;
 extern CString gExePath;
 extern BOOL	gbChinese;
-extern NETSLog gNETSLog;
 #define  WM_CLICK_ORDER  WM_USER+1
 #define  WM_EDIT_ORDER   WM_USER+2
 #define  WM_CLICK_CART	 WM_USER+3
 #define  WM_CLICK_HOME   WM_USER+4
 #define  WM_HOME_VIEW	 WM_USER+5
+#define  WM_CLICK_PAY	 WM_USER+6
+#define  WM_VOUCHER_SCAN  WM_USER+100
 #define  ID_SHOWTOOLTIP  4001
+#define  WM_VOUCHER_REDEEM WM_USER+101
+#include <iostream>
+#include <vector>
+using namespace std;
 #include <gdiplus.h> 
 #pragma comment(lib, "gdiplus.lib") 
 using namespace Gdiplus; 

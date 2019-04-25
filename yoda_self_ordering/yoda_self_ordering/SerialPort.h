@@ -15,6 +15,8 @@ struct MsgData
 
 enum RECV_STATUS
 {
+	NO_INIT_STATUS = -2,
+	NO_RESPONSE_STATUS = -1,
 	INIT_STATUS = 0,
 	ACK_STATUS = 1,
 	NACK_STATUS = 2,
@@ -112,6 +114,8 @@ public:
 
 	void ClosePort();
 
+	bool IsConn(UINT portNO);
+
 	/** 串口监听线程
 	*
 	*  监听来自串口的数据和信息
@@ -181,6 +185,7 @@ public:
 	char			m_lastApprovedECN[12];
 	char			m_lastApprovedFun[2];
 	DWORD			m_nTimeOut;
+	DWORD			dwCountTimer;
 };
 
 #endif //SERIALPORT_H_ 

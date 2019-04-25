@@ -13,7 +13,6 @@ extern PRODUCTINFO gCurProduct;
 #define ID_SIZE_TEXT					102
 #define ID_MONEY_TEA					103
 #define ID_ICE_TEXT						104
-#define ID_SUGAR_TEXT					105
 #define ID_TOPPING_TEXT					106
 #define ID_SELECT_TEXT					107
 #define ID_ICE_LABEL					108
@@ -45,6 +44,7 @@ extern PRODUCTINFO gCurProduct;
 #define ID_MONEY_TOPPING				150
 #define ID_MONEY_TOTAL					151
 #define ID_NO_TOPPING					152
+#define ID_MONEY_SIZE					153
 IMPLEMENT_SERIAL(CIceToppingContainerCtrl, CBCGPVisualContainerCtrl, 1)
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -158,8 +158,8 @@ void CIceToppingContainerCtrl::CommandInit(const CString& szProduct)
 	CBCGPVisualContainer* pContainer = GetVisualContainer();
 	ASSERT_VALID(pContainer);
 	InitImage();
-	m_dbToppingMoney = gCurProduct.dbMoney - gCurProduct.dbTeaMoney;
-	m_dbUnit = m_dbTeaMoney = gCurProduct.dbTeaMoney;
+	m_dbToppingMoney = gCurProduct.dbMoney - gCurProduct.dbUnitMenoy - gCurProduct.dbSizeMoney;
+	m_dbUnit = m_dbUnitMenoy = gCurProduct.dbUnitMenoy;
 	gCurProduct.szHoney = "";
 	gCurProduct.szSugar = "";
 	if (!gCurProduct.szSize.CompareNoCase(L"L") || !gCurProduct.szSize.CompareNoCase(L"大杯"))
@@ -167,13 +167,14 @@ void CIceToppingContainerCtrl::CommandInit(const CString& szProduct)
 		CBCGPImageGaugeImpl* pImage = DYNAMIC_DOWNCAST(CBCGPImageGaugeImpl, pContainer->GetByID(ID_SIZE_LARGE));
 		pImage->SetFillBrush(CBCGPBrush(CBCGPColor::GreenYellow));
 		m_pLastImageSize = pImage;
+		gCurProduct.szSizeCode = pImage->GetDescription();
 	}
 	else if (!gCurProduct.szSize.CompareNoCase(L"M") || !gCurProduct.szSize.CompareNoCase(L"中杯"))
 	{
 
 		CBCGPImageGaugeImpl* pImage = DYNAMIC_DOWNCAST(CBCGPImageGaugeImpl, pContainer->GetByID(ID_SIZE_NORMAL));
 		pImage->SetFillBrush(CBCGPBrush(CBCGPColor::GreenYellow));
-
+		gCurProduct.szSizeCode = pImage->GetDescription();
 		m_pLastImageSize = pImage;
 	}
 	else if (!gCurProduct.szSize.CompareNoCase(L"TALL") || !gCurProduct.szSize.CompareNoCase(L"高杯"))
@@ -181,6 +182,7 @@ void CIceToppingContainerCtrl::CommandInit(const CString& szProduct)
 		CBCGPImageGaugeImpl* pImage = DYNAMIC_DOWNCAST(CBCGPImageGaugeImpl, pContainer->GetByID(ID_SIZE_TALL_L));
 		pImage->SetFillBrush(CBCGPBrush(CBCGPColor::GreenYellow));
 		m_pLastImageSize = pImage;
+		gCurProduct.szSizeCode = pImage->GetDescription();
 	}
 
 	if (!gCurProduct.szICE.CompareNoCase(L"MORE ICE") || !gCurProduct.szICE.CompareNoCase(L"多冰"))
@@ -188,44 +190,54 @@ void CIceToppingContainerCtrl::CommandInit(const CString& szProduct)
 		CBCGPImageGaugeImpl* pImage = DYNAMIC_DOWNCAST(CBCGPImageGaugeImpl, pContainer->GetByID(ID_IMAGE_MORE_ICE));
 		pImage->SetFillBrush(CBCGPBrush(CBCGPColor::GreenYellow));
 		m_pLastImageGauge = pImage;
+		gCurProduct.szICECode = pImage->GetDescription();
 	}
 	else if (!gCurProduct.szICE.CompareNoCase(L"NORMAL ICE") || !gCurProduct.szICE.CompareNoCase(L"正常冰"))
 	{
 		CBCGPImageGaugeImpl* pImage = DYNAMIC_DOWNCAST(CBCGPImageGaugeImpl, pContainer->GetByID(ID_IMAGE_NORMAL_ICE));
 		pImage->SetFillBrush(CBCGPBrush(CBCGPColor::GreenYellow));
 		m_pLastImageGauge = pImage;
+		gCurProduct.szICECode = pImage->GetDescription();
 	}
 	else if (!gCurProduct.szICE.CompareNoCase(L"LESS ICE") || !gCurProduct.szICE.CompareNoCase(L"少冰"))
 	{
 		CBCGPImageGaugeImpl* pImage = DYNAMIC_DOWNCAST(CBCGPImageGaugeImpl, pContainer->GetByID(ID_IMAGE_LESS_ICE));
 		pImage->SetFillBrush(CBCGPBrush(CBCGPColor::GreenYellow));
 		m_pLastImageGauge = pImage;
+		gCurProduct.szICECode = pImage->GetDescription();
 	}
 	else if (!gCurProduct.szICE.CompareNoCase(L"FILTER ICE") || !gCurProduct.szICE.CompareNoCase(L"去冰"))
 	{
 		CBCGPImageGaugeImpl* pImage = DYNAMIC_DOWNCAST(CBCGPImageGaugeImpl, pContainer->GetByID(ID_IMAGE_FILTER_ICE));
 		pImage->SetFillBrush(CBCGPBrush(CBCGPColor::GreenYellow));
 		m_pLastImageGauge = pImage;
+		gCurProduct.szICECode = pImage->GetDescription();
 	}
 	else if (!gCurProduct.szICE.CompareNoCase(L"ROOM TEMP") || !gCurProduct.szICE.CompareNoCase(L"常温"))
 	{
 		CBCGPImageGaugeImpl* pImage = DYNAMIC_DOWNCAST(CBCGPImageGaugeImpl, pContainer->GetByID(ID_IMAGE_ROOM_TEMP));
 		pImage->SetFillBrush(CBCGPBrush(CBCGPColor::GreenYellow));
 		m_pLastImageGauge = pImage;
+		gCurProduct.szICECode = pImage->GetDescription();
 	}
 	else if (!gCurProduct.szICE.CompareNoCase(L"WARM") || !gCurProduct.szICE.CompareNoCase(L"温水"))
 	{
 		CBCGPImageGaugeImpl* pImage = DYNAMIC_DOWNCAST(CBCGPImageGaugeImpl, pContainer->GetByID(ID_IMAGE_WARM_WATER));
 		pImage->SetFillBrush(CBCGPBrush(CBCGPColor::GreenYellow));
 		m_pLastImageGauge = pImage;
+		gCurProduct.szICECode = pImage->GetDescription();
 	}
 	m_szProduct = szProduct;
 	SetTextInfo(ID_PRODUCT_TEXT, szProduct);
 	m_szSize = gCurProduct.szSize;
-	SetTextInfo(ID_SIZE_TEXT, m_szSize);
-	CString szMoney;
-	szMoney.Format(L"$%0.2lf", m_dbTeaMoney);
+	SetTextInfo(ID_SIZE_TEXT, L"- "+m_szSize);
+	m_dbSizeMoney = gCurProduct.dbSizeMoney;
+	CString szMoney, szSizeMoney;
+	szMoney.Format(L"$%0.2lf", m_dbUnit);
+	szSizeMoney.Format(L"$%0.2lf", m_dbSizeMoney);
 	SetTextInfo(ID_MONEY_TEA, szMoney);
+	if (m_dbSizeMoney > 0.1)
+		SetTextInfo(ID_MONEY_SIZE, szSizeMoney);
 	m_szIce = L"- " + gCurProduct.szICE;
 	SetTextInfo(ID_ICE_TEXT, m_szIce);
 	if (!gCurProduct.szTopping.IsEmpty() && gCurProduct.nToppingCounts>0)
@@ -235,7 +247,7 @@ void CIceToppingContainerCtrl::CommandInit(const CString& szProduct)
 		szMoney.Format(L"$%.2lf", gCurProduct.dbMoney);
 		SetTextInfo(ID_MONEY_TOTAL, szMoney);
 		SetTextInfo(ID_MONEY_TOPPING, gCurProduct.szToppingMoney);
-		m_szTopping = gCurProduct.szTopping;
+		m_szTopping = gCurProduct.ToppingArr;
 		m_szToppingMoney = gCurProduct.szToppingMoney;
 	}
 	SelectedTopping();
@@ -249,7 +261,7 @@ void CIceToppingContainerCtrl::SetTextInfo(UINT nID, CString szText)
 	CBCGPTextGaugeImpl* pText = DYNAMIC_DOWNCAST(CBCGPTextGaugeImpl, pContainer->GetByID(nID));
 	ASSERT_VALID(pText);
 	CBCGPTextFormat  pFormat = pText->GetTextFormat();
-	if (nID == ID_SIZE_TEXT || nID == ID_MONEY_TEA || nID == ID_MONEY_TOPPING)
+	if (nID == ID_MONEY_SIZE || nID == ID_MONEY_TEA || nID == ID_MONEY_TOPPING)
 	{
 		pFormat.SetTextAlignment(CBCGPTextFormat::BCGP_TEXT_ALIGNMENT::BCGP_TEXT_ALIGNMENT_TRAILING);
 		pFormat.SetTextVerticalAlignment(CBCGPTextFormat::BCGP_TEXT_ALIGNMENT::BCGP_TEXT_ALIGNMENT_TRAILING);
@@ -290,6 +302,7 @@ BOOL CIceToppingContainerCtrl::OnMouseDown(int nButton, const CBCGPPoint& pt)
 			m_szIce = pImage->GetName();
 			SetTextInfo(ID_ICE_TEXT, _T("- ") + m_szIce);
 			gCurProduct.szICE = m_szIce;
+			gCurProduct.szICECode = pImage->GetDescription();
 			pImage->SetFillBrush(CBCGPBrush(CBCGPColor::GreenYellow));
 			pImage->SetDirty(TRUE, TRUE);
 		}
@@ -304,36 +317,37 @@ BOOL CIceToppingContainerCtrl::OnMouseDown(int nButton, const CBCGPPoint& pt)
 			if (pImage->GetID() == ID_SIZE_NORMAL)
 			{
 				m_szSize = pImage->GetName();
-				m_dbTeaMoney = m_dbUnit;
+				m_dbSizeMoney = GetSizePrice(pImage->GetDescription());
 				pImage->SetFillBrush(CBCGPBrush(CBCGPColor::GreenYellow));
 				m_pLastImageSize = pImage;
 			}
 			else if (pImage->GetID() == ID_SIZE_LARGE)
 			{
 				m_szSize = pImage->GetName();
-				m_dbTeaMoney = m_dbUnit + atof(W2A(pImage->GetDescription()));
+				m_dbSizeMoney = GetSizePrice(pImage->GetDescription());
 				pImage->SetFillBrush(CBCGPBrush(CBCGPColor::GreenYellow));
 				m_pLastImageSize = pImage;
 			}
 			else if (pImage->GetID() == ID_SIZE_TALL_L)
 			{
 				m_szSize = pImage->GetName();
-				m_dbTeaMoney = m_dbUnit + atof(W2A(pImage->GetDescription()));
+				m_dbSizeMoney = GetSizePrice(pImage->GetDescription());
 				pImage->SetFillBrush(CBCGPBrush(CBCGPColor::GreenYellow));
 				m_pLastImageSize = pImage;
 			}
-			SetTextInfo(ID_SIZE_TEXT, m_szSize);
+			SetTextInfo(ID_SIZE_TEXT, L"- "+m_szSize);
 			CString szMoney;
-			szMoney.Format(L"$%.2lf", m_dbTeaMoney);
+			szMoney.Format(L"$%.2lf", m_dbUnitMenoy);
 			SetTextInfo(ID_MONEY_TEA, szMoney);
 			if (m_dbToppingMoney > 0.)
 			{
-				szMoney.Format(L"$%.2lf", m_dbTeaMoney + m_dbToppingMoney);
+				szMoney.Format(L"$%.2lf", m_dbUnitMenoy + m_dbToppingMoney);
 				SetTextInfo(ID_MONEY_TOTAL, szMoney);
 			}
 			gCurProduct.szSize = m_szSize;
-			gCurProduct.dbMoney = m_dbTeaMoney + m_dbToppingMoney;
-			gCurProduct.dbTeaMoney = m_dbTeaMoney;
+			gCurProduct.dbMoney = m_dbUnitMenoy + m_dbToppingMoney;
+			gCurProduct.dbUnitMenoy = m_dbUnitMenoy;
+			gCurProduct.szSizeCode = pImage->GetDescription();
 			pImage->SetDirty(TRUE, TRUE);
 
 		}
@@ -342,18 +356,26 @@ BOOL CIceToppingContainerCtrl::OnMouseDown(int nButton, const CBCGPPoint& pt)
 			if (gCurProduct.nToppingCounts >= 4)
 				return FALSE;
 			gCurProduct.nToppingCounts++;
-			m_dbToppingMoney += atof(W2A(pImage->GetDescription()));
+			double dbTopping;
+			dbTopping = GetToppingPrice(pImage->GetDescription());
+			m_dbToppingMoney += dbTopping;
 			CString szToppingMoney, szTotalMoney;
-			szToppingMoney.Format(L"+$%.2lf", atof(W2A(pImage->GetDescription())));
+			szToppingMoney.Format(L"+$%.2lf", dbTopping);
 			m_szToppingMoney += szToppingMoney + L"\n";
 			SetTextInfo(ID_MONEY_TOPPING, m_szToppingMoney);
 
-			szTotalMoney.Format(L"=$%.2lf", m_dbToppingMoney + m_dbTeaMoney);
+			szTotalMoney.Format(L"=$%.2lf", m_dbToppingMoney + m_dbUnit + m_dbSizeMoney);
 			SetTextInfo(ID_MONEY_TOTAL, szTotalMoney);
-			m_szTopping += L"- " + pImage->GetName() + L"\n";
-			SetTextInfo(ID_TOPPING_TEXT, m_szTopping);
-			gCurProduct.dbMoney = m_dbTeaMoney + m_dbToppingMoney;
-			gCurProduct.szTopping = m_szTopping;
+			m_szTopping.push_back(pImage->GetDescription());
+			CString  szTopAndMoney;
+			if (dbTopping > 0.1)
+				szTopAndMoney.Format(_T("-%s(%.2lf)\n"), pImage->GetName(), dbTopping);
+			else szTopAndMoney.Format(_T("-%s\n"), pImage->GetName());
+
+			gCurProduct.szTopping += szTopAndMoney;
+			SetTextInfo(ID_TOPPING_TEXT, gCurProduct.szTopping);
+			gCurProduct.dbMoney = m_dbUnit + m_dbSizeMoney + m_dbToppingMoney;
+			gCurProduct.ToppingArr = m_szTopping;
 			gCurProduct.szToppingMoney = m_szToppingMoney;
 			pImage->SetFillBrush(CBCGPBrush(CBCGPColor::GreenYellow));
 			pImage->SetDirty(TRUE, TRUE);
@@ -362,13 +384,14 @@ BOOL CIceToppingContainerCtrl::OnMouseDown(int nButton, const CBCGPPoint& pt)
 		{
 			m_dbToppingMoney = 0;
 			m_szToppingMoney = "";
+			m_szTopping.clear();
 			SetTextInfo(ID_MONEY_TOPPING, m_szToppingMoney);
 			SetTextInfo(ID_MONEY_TOTAL, L"");
-			m_szTopping = "";
-			SetTextInfo(ID_TOPPING_TEXT, m_szTopping);
+			SetTextInfo(ID_TOPPING_TEXT, L"");
 			pContainer->Redraw();
-			gCurProduct.szTopping = m_szTopping;
-			gCurProduct.dbMoney = m_dbTeaMoney;
+			gCurProduct.szTopping = L"";
+			gCurProduct.ToppingArr = m_szTopping;
+			gCurProduct.dbMoney = m_dbUnit + m_dbSizeMoney;
 			gCurProduct.nToppingCounts = 0;
 			CleanAllTopping();
 		}

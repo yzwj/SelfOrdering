@@ -5,7 +5,7 @@
 #include "yoda_self_ordering.h"
 #include "NETSOperation.h"
 
-
+UINT WM_CLOSE_SON;
 // CNETSOperation dialog
 
 IMPLEMENT_DYNAMIC(CNETSOperation, CDialog)
@@ -35,6 +35,7 @@ BEGIN_MESSAGE_MAP(CNETSOperation, CDialog)
 	ON_WM_PAINT()
 	ON_WM_CTLCOLOR()
 	ON_WM_CLOSE()
+	ON_BN_CLICKED(IDC_CLOSE, &CNETSOperation::OnBnClickedClose)
 END_MESSAGE_MAP()
 
 
@@ -48,7 +49,7 @@ DWORD WINAPI LogonThread(LPVOID lpParam)
 	{
 		CString ECN;
 		CTime tm; tm = CTime::GetCurrentTime();
-		ECN = tm.Format("S%Y%m%d001");
+		ECN = tm.Format("S%Y%m%d002");
 		USES_CONVERSION;
 		int result = pThis->m_Port.LogonNETS(W2A(ECN));
 		if (result == TRANSACTION_COMPLATED_STATUS)
@@ -56,6 +57,11 @@ DWORD WINAPI LogonThread(LPVOID lpParam)
 			::WritePrivateProfileString(L"NETS", L"Logon", L"1", gIniFile);
 			::WritePrivateProfileString(L"NETS", L"Settlement", L"0", gIniFile);
 			pThis->GetDlgItem(IDC_STATIC_DESC)->SetWindowText(L"Logon Success!");
+		}
+		else if(result == NO_RESPONSE_STATUS)
+		{
+			USES_CONVERSION;
+			pThis->GetDlgItem(IDC_STATIC_DESC)->SetWindowText(L"Terminal no response.");
 		}
 		else
 		{
@@ -175,4 +181,33 @@ void CNETSOperation::OnClose()
 	// TODO: Add your message handler code here and/or call default
 
 	CDialog::OnClose();
+}
+
+
+void CNETSOperation::OnBnClickedClose()
+{
+	// TODO: Add your control notification handler code here
+	//::PostMessage(AfxGetMainWnd()->m_hWnd, WM_CLOSE_SON,NULL, NULL);
+	
+	int nPort = ::GetPrivateProfileInt(L"NETS", L"Port", 0, gIniFile);
+	if (m_Port.InitPort(nPort))
+	{
+		CString ECN;
+		USES_CONVERSION;
+		strcpy(m_Port.m_lastApprovedECN, "190423002300");
+		strcpy(m_Port.m_lastApprovedFun, "56");
+		int result = m_Port.GetLastApproved("190423002300");
+		GetDlgItem(IDC_STATIC_DESC)->SetWindowText(L"");
+		if (result == TRANSACTION_COMPLATED_STATUS)
+		{
+			CString szText;
+			szText = m_Port.m_lastApprovedECN;
+			GetDlgItem(IDC_STATIC_DESC)->SetWindowText(szText);
+		}
+		else
+		{
+			GetDlgItem(IDC_STATIC_DESC)->SetWindowText(L"Transaction error.");
+		}
+	}
+	m_Port.ClosePort();
 }

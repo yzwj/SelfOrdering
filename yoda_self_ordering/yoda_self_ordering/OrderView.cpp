@@ -14,6 +14,7 @@ extern PRODUCTINFO gCurProduct;
 #define ID_CONTINUE_ORDERING	160
 #define ID_ORDER_COUNTS			161
 #define ID_TOTAL_MONEY			162
+#define ID_PAY_BUTTON			163
 //////////////////////////////////////////////////////////
 //COrderContainerCtrl
 IMPLEMENT_SERIAL(COrderContainerCtrl, CBCGPVisualContainerCtrl,1)
@@ -22,8 +23,6 @@ COrderContainerCtrl::COrderContainerCtrl() :
 {
 	CBCGPVisualContainer* pContainer = GetVisualContainer();
 	ASSERT_VALID(pContainer);
-	CBCGPVisualScrollBarColorTheme theme(CBCGPColor::SteelBlue);
-	pContainer->EnableScrollBars(TRUE, &theme, CBCGPVisualScrollBar::BCGP_VISUAL_SCROLLBAR_STYLE::BCGP_VISUAL_SCROLLBAR_3D_ROUNDED);
 	m_curOrderMode = ORDER_MODE_NONE;
 	m_nCurOrderIndex = 0;
 }
@@ -49,6 +48,9 @@ int COrderContainerCtrl::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	CBCGPImageGaugeImpl* pImage = DYNAMIC_DOWNCAST(CBCGPImageGaugeImpl, pContainer->GetByID(ID_CONTINUE_ORDERING));
 	ASSERT_VALID(pImage);
 	pImage->SetImage(CBCGPImage(IDB_CONTINUE), CBCGPSize(pImage->GetRect().Width(), pImage->GetRect().Height()));
+	pImage = DYNAMIC_DOWNCAST(CBCGPImageGaugeImpl, pContainer->GetByID(ID_PAY_BUTTON));
+	ASSERT_VALID(pImage);
+	pImage->SetImage(CBCGPImage(IDB_PAY), CBCGPSize(pImage->GetRect().Width(), pImage->GetRect().Height()));
 	return 0;
 }
 void COrderContainerCtrl::OnInitOrder()
@@ -60,7 +62,11 @@ void COrderContainerCtrl::OnInitOrder()
 	for (POSITION pos = glstOrder.GetHeadPosition(); pos != NULL;)
 	{
 		LPORDERINFO info = glstOrder.GetNext(pos);
-		COrderItemVisualObject* pObject = new COrderItemVisualObject(info->productInfo.szSize, info->productInfo.dbMoney, gbChinese? info->productInfo.szProductNameCN:info->productInfo.szProductName,
+		CString szUnit,szSizePrice = L"";
+		szUnit.Format(_T("  %.2lf"), info->productInfo.dbUnitMenoy);
+		if(info->productInfo.dbSizeMoney>0.1)
+			szSizePrice.Format(_T("(%.2lf)"), info->productInfo.dbSizeMoney);
+		COrderItemVisualObject* pObject = new COrderItemVisualObject(info->productInfo.szSize+ szSizePrice, info->productInfo.dbMoney, gbChinese? info->productInfo.szProductNameCN+ szUnit :info->productInfo.szProductName + szUnit,
 			info->productInfo.szProductThumbFile, info->productInfo.szICE, info->productInfo.bShowHoneyLevel? info->productInfo.szHoney:info->productInfo.szSugar, info->productInfo.szTopping, info->nProductCounts);
 		pObject->SetOrderIndex(info->nOrderID);
 		pContainer->Add(pObject);
@@ -191,9 +197,14 @@ BOOL COrderContainerCtrl::OnMouseDown(int nButton, const CBCGPPoint& pt)
 		}
 	}
 	CBCGPImageGaugeImpl * pImage = DYNAMIC_DOWNCAST(CBCGPImageGaugeImpl, pContainer->GetFromPoint(pt));
-	if (pImage != NULL)
+	if (pImage != NULL && pImage->GetID() == ID_CONTINUE_ORDERING)
 	{
 		::PostMessage(AfxGetMainWnd()->m_hWnd, WM_CLICK_ORDER, 0, 0);
+	}
+	else if (pImage != NULL && pImage->GetID() == ID_PAY_BUTTON)
+	{
+		if(glstOrder.GetSize()>0)
+			::PostMessage(AfxGetMainWnd()->m_hWnd, WM_CLICK_PAY, 0, 0);
 	}
 	return FALSE;
 }

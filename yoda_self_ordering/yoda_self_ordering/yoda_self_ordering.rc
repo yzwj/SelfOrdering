@@ -129,11 +129,10 @@ BEGIN
     CTEXT           "",IDC_EXIT_DESC,17,170,165,16,SS_CENTERIMAGE
 END
 
-IDD_DIALOG_GIF DIALOGEX 0, 0, 261, 168
-STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+IDD_DIALOG_GIF DIALOGEX 0, 0, 150, 164
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_VISIBLE | WS_BORDER
 FONT 8, "MS Shell Dlg", 400, 0, 0x1
 BEGIN
-    CONTROL         "",IDC_STATIC_GIF,"Static",SS_BLACKRECT,7,7,247,154
 END
 
 IDD_PAYMENT_STATUS DIALOGEX 0, 0, 211, 172
@@ -155,6 +154,25 @@ BEGIN
     CTEXT           "",IDC_STATIC_DESC,16,117,204,24,SS_CENTERIMAGE
     CONTROL         "",IDC_STATIC_LOG,"Static",SS_OWNERDRAW,1,1,235,50
     CONTROL         "",IDC_PROGRESS,"msctls_progress32",WS_BORDER,65,145,80,14
+    PUSHBUTTON      "Exit System",IDC_CLOSE,183,143,50,17
+END
+
+IDD_DIALOG_VOUCHER DIALOGEX 0, 0, 290, 216
+STYLE DS_SETFONT | DS_FIXEDSYS | WS_POPUP | WS_SYSMENU
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    CTEXT           "??????Voucher QRCode ???????QRCode Scanner",IDC_STATIC,54,7,150,22
+    LISTBOX         IDC_LIST_VOUCHER,21,37,251,147,LBS_SORT | LBS_MULTIPLESEL | LBS_OWNERDRAWVARIABLE | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    PUSHBUTTON      "OK",IDC_BUTTON_OK,221,190,50,19
+END
+
+IDD_DIALOG_VOUCHERS DIALOGEX 0, 0, 241, 261
+STYLE DS_SETFONT | DS_MODALFRAME | DS_FIXEDSYS | WS_POPUP | WS_CAPTION | WS_SYSMENU
+CAPTION "Vouchers"
+FONT 8, "MS Shell Dlg", 400, 0, 0x1
+BEGIN
+    LISTBOX         IDC_LIST_VOUCHER,7,46,227,208,LBS_OWNERDRAWVARIABLE | LBS_HASSTRINGS | LBS_NOINTEGRALHEIGHT | WS_VSCROLL | WS_TABSTOP
+    LTEXT           "SCAN QRCODE TO SHOW YOU VOUCHER, ONE ORDER ONLY USE ONE VOUCHER.",IDC_STATIC_TIP,7,7,227,35
 END
 
 
@@ -228,10 +246,9 @@ BEGIN
     IDD_DIALOG_GIF, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 254
+        RIGHTMARGIN, 143
         TOPMARGIN, 7
-        BOTTOMMARGIN, 161
-        HORZGUIDE, 160
+        BOTTOMMARGIN, 157
     END
 
     IDD_PAYMENT_STATUS, DIALOG
@@ -246,6 +263,22 @@ BEGIN
     BEGIN
         RIGHTMARGIN, 234
         TOPMARGIN, 1
+    END
+
+    IDD_DIALOG_VOUCHER, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 283
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 209
+    END
+
+    IDD_DIALOG_VOUCHERS, DIALOG
+    BEGIN
+        LEFTMARGIN, 7
+        RIGHTMARGIN, 234
+        TOPMARGIN, 7
+        BOTTOMMARGIN, 254
     END
 END
 #endif    // APSTUDIO_INVOKED
@@ -332,6 +365,28 @@ IDB_NETSLOG             PNG                     "resource\\All Acceptance.png"
 
 IDB_PAY_SUCCESS         PNG                     "resource\\Success.png"
 
+IDB_CAPTION_PAY_BUTTON  PNG                     "resource\\PayCapButton.png"
+
+IDB_PAY                 PNG                     "resource\\pay.png"
+
+IDB_VOUCHER             PNG                     "resource\\voucher.png"
+
+IDB_NETS_FLASHPAY_DISABLE PNG                     "resource\\FlashPay - Disable.png"
+
+IDB_NETS_QR_DISABLE     PNG                     "resource\\NETS QR - Disable.png"
+
+IDB_NETS_DISABLE        PNG                     "resource\\NETS-Disable.png"
+
+IDB_VOUCHERICON         PNG                     "resource\\voucherIcon.png"
+
+IDB_COUNTER_DISABLE     PNG                     "resource\\counter_disable.png"
+
+IDB_IPAY_DISABLE        PNG                     "resource\\iPay_Disable.png"
+
+IDB_FREE                PNG                     "resource\\Free.png"
+
+IDB_FREE_DISABLE        PNG                     "resource\\Free_disable.png"
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -390,6 +445,16 @@ BEGIN
     0
 END
 
+IDD_DIALOG_VOUCHER AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
+IDD_DIALOG_VOUCHERS AFX_DIALOG_LAYOUT
+BEGIN
+    0
+END
+
 
 /////////////////////////////////////////////////////////////////////////////
 //
@@ -433,6 +498,18 @@ BEGIN
         MENUITEM "&About yoda_self_ordering...", ID_APP_ABOUT
     END
 END
+
+
+/////////////////////////////////////////////////////////////////////////////
+//
+// GIF
+//
+
+IDR_GIF_NETSDEBIT       GIF                     "resource\\ICT250 NETS.gif"
+
+IDR_GIF_NETSFLASHPAY    GIF                     "resource\\ICT250 NETSFlashPay.gif"
+
+IDR_GIF_NETSQRCODE      GIF                     "resource\\ICT250 NETSQR.gif"
 
 
 /////////////////////////////////////////////////////////////////////////////

@@ -59,8 +59,7 @@ void CCashPop::OnBnClickedButtonHome()
 	// TODO: Add your control notification handler code here
 	KillTimer(1000);
 	SendMessage(WM_CLOSE);
-	//::PostMessage(AfxGetMainWnd()->m_hWnd, WM_HOME_VIEW, 0, 0);
-	
+	::PostMessage(AfxGetMainWnd()->m_hWnd, WM_HOME_VIEW, 0, 0);
 }
 
 void CCashPop::OnClose()

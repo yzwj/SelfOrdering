@@ -4,6 +4,7 @@
 #if _MSC_VER > 1000
 #pragma once
 #endif // _MSC_VER > 1000
+
 class Cyoda_self_orderingView;
 class CToppingContainerCtrl : public CBCGPVisualContainerCtrl
 {
@@ -39,10 +40,9 @@ protected:
 	CBCGPBrush					m_brFill;
 	CString						m_szProduct;
 	CString						m_szSize;
-	double						m_dbTeaMoney;
 	CString						m_szIce;
 	CString						m_szSugar;
-	CString						m_szTopping;
+	std::vector<CString>		m_szTopping;
 	CString						m_szToppingMoney;
 	double						m_dbToppingMoney;
 	double						m_dbUnit;

@@ -80,7 +80,7 @@ void CPaymentStatusDlg::OnBnClickedButtonTry()
 	{
 		KillTimer(1001);
 		PostMessage(WM_CLOSE);
-		//::PostMessage(AfxGetMainWnd()->m_hWnd, WM_HOME_VIEW, 0, 0);
+		::PostMessage(AfxGetMainWnd()->m_hWnd, WM_HOME_VIEW, 0, 0);
 	}
 }
 

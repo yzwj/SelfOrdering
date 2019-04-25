@@ -6,16 +6,19 @@
 #include "yoda_self_orderingView.h"
 #include "MainFrm.h"
 #include "TipInfo.h"
-
+#include "NETSGuideGif.h"
+#include "NETSOperation.h"
 CTipInfo* CTipInfo::c_pTip;
 UINT	gCurViewID;
 extern PRODUCTINFO gCurProduct;
 extern 	CList<LPORDERINFO, LPORDERINFO>	glstOrder;
+UINT WM_SCAN_MESSAGE;
 #ifdef _DEBUG
 #define new DEBUG_NEW
 #endif
 // CMainFrame
-
+typedef void(*lpRegisterScanHook)(HWND hWnd);
+typedef void(*lpUnRegisterScanHook)(HWND hWnd);
 IMPLEMENT_DYNCREATE(CMainFrame, CFrameWnd)
 
 BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
@@ -25,7 +28,11 @@ BEGIN_MESSAGE_MAP(CMainFrame, CFrameWnd)
 	ON_MESSAGE(WM_CLICK_CART,OnOrderView)
 	ON_MESSAGE(WM_CLICK_HOME, OnCategroyView)
 	ON_MESSAGE(WM_HOME_VIEW, OnHomeView)
+	ON_MESSAGE(WM_CLICK_PAY, OnPayView)
 	ON_MESSAGE(ID_SHOWTOOLTIP, &CMainFrame::ShowBalloonTip)
+	ON_REGISTERED_MESSAGE(WM_SCAN_MESSAGE, OnScanMessage)
+	ON_REGISTERED_MESSAGE(WM_CLOSE_SON, OnCloseSon)
+
 	ON_WM_TIMER()
 END_MESSAGE_MAP()
 
@@ -37,6 +44,17 @@ CMainFrame::CMainFrame()
 	m_cx = GetSystemMetrics(SM_CXSCREEN);
 	m_cy = GetSystemMetrics(SM_CYSCREEN);
 	m_hLangDLL = NULL;
+	m_hScanHookDll = LoadLibrary(L"SystemHotKeyHook.dll");
+	if (m_hScanHookDll == NULL)
+	{
+		TCHAR chCurDir[MAX_PATH] = { 0 };
+		GetCurrentDirectory(MAX_PATH, chCurDir);
+		CString szPath = chCurDir;
+		szPath += L"\\SystemHotKeyHook.dll";
+		SetCurrentDirectory(chCurDir);
+		m_hScanHookDll = LoadLibraryEx(szPath, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
+		AfxMessageBox(szPath);
+	}
 }
 
 CMainFrame::~CMainFrame()
@@ -102,6 +120,7 @@ int CMainFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 	SetTimer(1001,1000,NULL);
 	//SetTimer(1002, 60*1000, NULL);
 	UpdateData(false);
+	RegisterScanHook();
 	// Menu will not take the focus on activation:
 	return 0;
 }
@@ -123,6 +142,48 @@ void CMainFrame::FullScreen()
 	::ShowWindow(hStar, SW_HIDE);
 #endif
 	SetWindowPos(&CWnd::wndTopMost, 0, 0, m_cx, m_cy, SWP_SHOWWINDOW);//窗口置顶
+}
+
+void CMainFrame::RegisterScanHook()
+{
+	lpRegisterScanHook RegisterScanhook;
+	RegisterScanhook = NULL;
+	if (m_hScanHookDll != NULL)
+	{
+		RegisterScanhook = (lpRegisterScanHook)GetProcAddress(m_hScanHookDll, "SetHook");
+		if (RegisterScanhook != NULL)
+		{
+			RegisterScanhook(m_hWnd);
+		}
+		else
+		{
+			AfxMessageBox(L"RegisterScanHook failed!");
+			exit(0);
+		}
+	}
+	else
+	{
+		HWND hWnd = ::FindWindow(_T("Shell_TrayWnd"), NULL);
+		HWND   hStar = ::FindWindow(_T("Button"), NULL);
+		::ShowWindow(hWnd, SW_SHOW);
+		::ShowWindow(hStar, SW_SHOW);
+		AfxMessageBox(L"Install Hook failed!");
+		exit(0);
+	}
+}
+
+void CMainFrame::UnRegisterScanHook()
+{
+	lpUnRegisterScanHook UnRegisterScanhook;
+	UnRegisterScanhook = NULL;
+	if (m_hScanHookDll != NULL)
+	{
+		UnRegisterScanhook = (lpUnRegisterScanHook)GetProcAddress(m_hScanHookDll, "UnHook");
+		if (UnRegisterScanhook != NULL)
+		{
+			UnRegisterScanhook(m_hWnd);
+		}
+	}
 }
 BOOL CMainFrame::PreCreateWindow(CREATESTRUCT& cs)
 {
@@ -189,6 +250,12 @@ LRESULT CMainFrame::OnOrderView(WPARAM wp, LPARAM lp)
 {
 	Cyoda_self_orderingView * pView = (Cyoda_self_orderingView*)GetActiveView();
 	pView->ShowView(ID_VIEW_CHECK_ORDERING);
+	return LRESULT();
+}
+LRESULT CMainFrame::OnPayView(WPARAM wp, LPARAM lp)
+{
+	Cyoda_self_orderingView * pView = (Cyoda_self_orderingView*)GetActiveView();
+	pView->ShowView(ID_VIEW_PAYMENT);
 	return LRESULT();
 }
 LRESULT CMainFrame::OnCategroyView(WPARAM wp, LPARAM lp)
@@ -281,4 +348,59 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 		}
 	}*/
 	CFrameWnd::OnTimer(nIDEvent);
+}
+
+DWORD dwCountTime;
+CString szScanCode;
+LRESULT  CMainFrame::OnScanMessage(WPARAM wParam, LPARAM lParam)
+{
+	if (dwCountTime == 0)
+	{
+		dwCountTime = GetTickCount();
+	}
+	if (GetTickCount() - dwCountTime > 1000)
+	{
+		dwCountTime = 0;
+		szScanCode = L"";
+	}
+	int nCode = (int)lParam;
+	CString szTime, szOutlet;
+	if (nCode == 0x0D)
+	{
+		if (!szScanCode.CompareNoCase(_T("ITEAADMIN")))
+		{
+			CNETSOperation *op = new CNETSOperation();
+			op->Create(IDD_NETS_OPER);
+			op->ShowWindow(SW_SHOWNORMAL);
+			op->CenterWindow(this);
+		}
+		else
+		{
+			HWND hWnd = ::FindWindow(NULL, L"Vouchers");
+			if (hWnd != NULL)
+			{
+				::PostMessageW(hWnd, WM_VOUCHER_SCAN, NULL, (LPARAM)((LPCTSTR)szScanCode));
+			}
+		}
+	}
+	else
+	{
+		if (nCode >= 0x30 && nCode <= 0x7A)
+		{
+			CString szTmp;
+			szTmp.Format(L"%c", nCode);
+			szScanCode += szTmp;
+			dwCountTime = GetTickCount();
+			
+		}
+		OutputDebugString(szScanCode);
+	}
+	return 1;
+}
+
+HRESULT CMainFrame::OnCloseSon(WPARAM wParam, LPARAM lParam)
+{
+	UnRegisterScanHook();
+	ShouDown(GetVerInfo());
+	return 0;
 }

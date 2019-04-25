@@ -1,19 +1,24 @@
-// NETSGuideGif.cpp : implementation file
+﻿// NETSGuideGif.cpp : implementation file
 //
 
 #include "stdafx.h"
 #include "yoda_self_ordering.h"
 #include "NETSGuideGif.h"
-
+TRANS_STATUS gTransStatus;
 
 // CNETSGuideGif dialog
 
-IMPLEMENT_DYNAMIC(CNETSGuideGif, CDialog)
+IMPLEMENT_DYNAMIC(CNETSGuideGif, CDialogEx)
 
 CNETSGuideGif::CNETSGuideGif(CWnd* pParent /*=NULL*/)
-	:CDialog(CNETSGuideGif::IDD, pParent)
+	:CDialogEx(CNETSGuideGif::IDD, pParent)
 {
 	//mFilterGraph = NULL;
+}
+
+CNETSGuideGif::CNETSGuideGif(int nResID, CWnd * pParent)
+{
+	m_nResID = nResID;
 }
 
 CNETSGuideGif::~CNETSGuideGif()
@@ -23,16 +28,16 @@ CNETSGuideGif::~CNETSGuideGif()
 
 void CNETSGuideGif::DoDataExchange(CDataExchange* pDX)
 {
-	CDialog::DoDataExchange(pDX);
-	DDX_Control(pDX, IDC_STATIC_GIF, m_staticGif);
+	CDialogEx::DoDataExchange(pDX);
 }
 
 
-BEGIN_MESSAGE_MAP(CNETSGuideGif, CDialog)
+BEGIN_MESSAGE_MAP(CNETSGuideGif, CDialogEx)
 	ON_WM_CLOSE()
 	ON_WM_ERASEBKGND()
 	ON_WM_PAINT()
 	ON_WM_SIZE()
+	ON_WM_TIMER()
 END_MESSAGE_MAP()
 
 
@@ -41,95 +46,121 @@ END_MESSAGE_MAP()
 
 BOOL CNETSGuideGif::OnInitDialog()
 {
-	CDialog::OnInitDialog();
-	// TODO:  Add extra initialization here
-	CenterWindow();
-	HRESULT hr = CoInitialize(NULL);
-	if (FAILED(hr)) {
-		AfxMessageBox(_T("Error - Can't init COM."));
-		return FALSE;
-	}
-	hr = CoCreateInstance(CLSID_FilterGraph, NULL, CLSCTX_INPROC_SERVER, IID_IGraphBuilder, (void **)&pGraph);
-	if (FAILED(hr)) {
-		AfxMessageBox(_T("Error - Can't create Filter Graph."));
-		return FALSE;
-	}
-	//  Query Interface
-	hr |= pGraph->QueryInterface(IID_IMediaControl, (void **)&pControl);
-	hr |= pGraph->QueryInterface(IID_IMediaEvent, (void **)&pEvent);
-	hr |= pGraph->QueryInterface(IID_IBasicVideo, (void **)&pVideo);
-	hr |= pGraph->QueryInterface(IID_IBasicAudio, (void **)&pAudio);
-	hr |= pGraph->QueryInterface(IID_IVideoWindow, (void **)&pWindow);
-	hr |= pGraph->QueryInterface(IID_IMediaSeeking, (void **)&pSeeking);
-	if (FAILED(hr)) {
-		AfxMessageBox(_T("Error - Can't Query Interface."));
-		return FALSE;
-	}
-	hr = pGraph->RenderFile(L"c:\\animation ICT250 GIF\\I'm With You.avi", NULL);
-	if (FAILED(hr)) {
-		AfxMessageBox(_T("Can't open input file!"));
-		return 0;
-	}
-
-	//Set Window
-	HWND screen_hwnd = NULL;
-	RECT windowRect;
-	screen_hwnd = this->GetDlgItem(IDC_STATIC_GIF)->GetSafeHwnd();
-	::GetClientRect(screen_hwnd, &windowRect);
-
-	pWindow->put_Visible(OAFALSE);
-	pWindow->put_Owner((OAHWND)m_hWnd);
-	pWindow->put_Left(0);
-	pWindow->put_Top(0);
-	pWindow->put_Width(windowRect.right - windowRect.left);
-	pWindow->put_Height(windowRect.bottom - windowRect.top);
-	pWindow->put_WindowStyle(WS_CHILD | WS_CLIPCHILDREN);
-	pWindow->put_MessageDrain((OAHWND)m_hWnd);//Receive Message
-	pWindow->put_Visible(OAFALSE);
-	RECT grc;
-	GetClientRect(&grc);
-	pWindow->SetWindowPosition(0, 0, grc.right, grc.bottom);
-	HWND dlg_hwnd = NULL;
-	dlg_hwnd = this->GetSafeHwnd();
-	pEvent->SetNotifyWindow((OAHWND)dlg_hwnd, NULL, 0);
-
-	// Run
-	hr = pControl->Run();
+	CDialogEx::OnInitDialog();
+#ifndef DEBUG
+	SetWindowPos(&wndTopMost, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_SHOWWINDOW);
+#else
+	SetWindowPos(NULL, 0, 0, GetSystemMetrics(SM_CXSCREEN), GetSystemMetrics(SM_CYSCREEN), SWP_SHOWWINDOW);
+#endif // !DEBUG
+	SetTimer(1001, 100, NULL);
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // EXCEPTION: OCX Property Pages should return FALSE
 }
-void CNETSGuideGif::CreateGraph()
-{
-	
-}
-void CNETSGuideGif::DestroyGraph()
-{
-}
+
 
 void CNETSGuideGif::OnClose()
 {
 	// TODO: Add your message handler code here and/or call default
-	CDialog::OnClose();
+	CDialogEx::OnClose();
 }
 
 BOOL CNETSGuideGif::OnEraseBkgnd(CDC* pDC)
 {
 	// TODO: Add your message handler code here and/or call default
-	return CDialog::OnEraseBkgnd(pDC);
+	return CDialogEx::OnEraseBkgnd(pDC);
 }
-
-
 void CNETSGuideGif::OnPaint()
 {
 	CPaintDC dc(this); // device context for painting
 					   // TODO: Add your message handler code here
 					   // Do not call CDialog::OnPaint() for painting messages
+	if (gTransStatus == TRANS_START || gTransStatus == TRANS_PROCESSING)
+	{
+		HRSRC hResource = ::FindResource(AfxGetInstanceHandle(), MAKEINTRESOURCE(m_nResID), _T("GIF"));
+		if (!hResource)
+			return;
+
+		DWORD imageSize = ::SizeofResource(AfxGetInstanceHandle(), hResource);
+		if (!imageSize)
+			return;
+
+		const void* pResourceData = ::LockResource(::LoadResource(AfxGetInstanceHandle(), hResource));
+		if (!pResourceData)
+			return;
+
+		HGLOBAL hBuffer = ::GlobalAlloc(GMEM_FIXED, imageSize);
+		if (NULL == hBuffer)
+			return;
+
+		void* pBuffer = ::GlobalLock(hBuffer);
+		if (pBuffer)
+		{
+			CopyMemory(pBuffer, pResourceData, imageSize);
+			IStream* pStream = NULL;
+			if (::CreateStreamOnHGlobal(hBuffer, FALSE, &pStream) == S_OK)
+			{
+				Image* image = Image::FromStream(pStream);
+				pStream->Release();
+				//获得有多少个维度，对于gif就一个维度
+				UINT count = image->GetFrameDimensionsCount();
+				GUID *pDimensionIDs = (GUID*)new GUID[count];
+				image->GetFrameDimensionsList(pDimensionIDs, count);
+				TCHAR strGuid[39];
+				StringFromGUID2(pDimensionIDs[0], strGuid, 39);
+				UINT frameCount = image->GetFrameCount(&pDimensionIDs[0]);
+				delete[]pDimensionIDs;
+				//获得各帧之间的时间间隔
+				//先获得有多少个时间间隔，PropertyTagFrameDelay是GDI+中预定义的一个GIG属性ID值，表示标签帧数据的延迟时间
+				UINT   FrameDelayNums = image->GetPropertyItemSize(PropertyTagFrameDelay);
+				PropertyItem *  lpPropertyItem = new  PropertyItem[FrameDelayNums];
+				image->GetPropertyItem(PropertyTagFrameDelay, FrameDelayNums, lpPropertyItem);
+				//Guid的值在显示GIF为FrameDimensionTime，显示TIF时为FrameDimensionPage
+				int    FrameCount = 0;
+				GUID    Guid = FrameDimensionTime;
+				image->SelectActiveFrame(&Guid, FrameCount);
+				while (gTransStatus == TRANS_PROCESSING || gTransStatus == TRANS_START)
+				{
+					Graphics   gh(dc);
+					CRect rc;
+					GetWindowRect(&rc);
+					int XSpace = rc.Width() - image->GetWidth();
+					int YSpace = rc.Height() - image->GetHeight();
+					//显示当前帧
+					gh.DrawImage(image, XSpace / 2, YSpace / 2, image->GetWidth(), image->GetHeight());
+
+					//时间间隔
+					long lPause = ((long*)lpPropertyItem->value)[FrameCount] * 10;
+					Sleep(lPause);
+
+					//设置当前需要显示的帧数
+					if ((FrameCount + 1) == frameCount)
+					{   //如果已经显示到最后一帧，那么重新开始显示
+						FrameCount = 0;
+						image->SelectActiveFrame(&Guid, 0);
+					}
+					else
+					{
+						image->SelectActiveFrame(&Guid, ++FrameCount);
+					}
+				}
+			}
+		}
+	}
+}
+void CNETSGuideGif::OnSize(UINT nType, int cx, int cy)
+{
+	CDialogEx::OnSize(nType, cx, cy);
+	// TODO: Add your message handler code here
 }
 
 
-void CNETSGuideGif::OnSize(UINT nType, int cx, int cy)
+void CNETSGuideGif::OnTimer(UINT_PTR nIDEvent)
 {
-	CDialog::OnSize(nType, cx, cy);
-
-	// TODO: Add your message handler code here
+	// TODO: Add your message handler code here and/or call default
+	if (nIDEvent == 1001 && (gTransStatus == TRANS_END || gTransStatus == TRANS_INIT))
+	{
+		KillTimer(nIDEvent);
+		SendMessage(WM_CLOSE);
+	}
+	CDialogEx::OnTimer(nIDEvent);
 }

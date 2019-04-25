@@ -28,9 +28,10 @@ public:
 	void EnableNextButton();
 	void EnableCartButton();
 	void EnablePaymentButton();
-	bool printTicket();
+	
 // Operations
 public:
+	BOOL InitCfg();
 	void InitUITiles();
 	BOOL InitCategroy();
 	BOOL InitProduct();
@@ -39,6 +40,8 @@ public:
 	void SetCurProduct(int nCategroy,int nProductID);
 	void ShowView(int nViewID);
 	void ShowHomePage();
+	CString GetCategroyName(std::vector<int> category_id);
+	CString GetProductName(std::vector<int> product_list);
 // Overrides
 public:
 	virtual void OnDraw(CDC* pDC);  // overridden to draw this view
@@ -65,6 +68,7 @@ protected:
 	CList<PRODUCTINFO*, PRODUCTINFO*>		m_lstProduct;
 	BOOL								m_bEditOrder;
 	CBCGPVisualContainerCtrl              m_wndContainerCtrl;
+	BOOL								m_bClickCart;
 public:
 	
 // Generated message map functions

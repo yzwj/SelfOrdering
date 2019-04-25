@@ -35,7 +35,7 @@
 				<ID>
 					<VALUE>162</VALUE>
 				</ID>
-				<RECT>331, 163, 704, 165</RECT>
+				<RECT>331, 200, 704, 202</RECT>
 				<ITEM_ID>
 					<VALUE>1</VALUE>
 					<CONNECTOR>TRUE</CONNECTOR>
@@ -49,10 +49,10 @@
 				<THICKNESS>2.000000</THICKNESS>
 				<ANCHORS>
 					<ANCHOR>
-						<POINT>331, 163</POINT>
+						<POINT>331, 200</POINT>
 					</ANCHOR>
 					<ANCHOR>
-						<POINT>704, 165</POINT>
+						<POINT>704, 202</POINT>
 					</ANCHOR>
 				</ANCHORS>
 			</ELEMENT>
@@ -61,7 +61,7 @@
 				<ID>
 					<VALUE>160</VALUE>
 				</ID>
-				<RECT>366, 36, 542, 111</RECT>
+				<RECT>384, 7, 529, 62</RECT>
 				<COLORS>
 					<TEXT_BRUSH>
 						<COLOR>246, 236, 191</COLOR>
@@ -77,10 +77,9 @@
 				<DATA_VALUE>TOTAL：</DATA_VALUE>
 				<TEXTFORMAT>
 					<FAMILY>Arial</FAMILY>
-					<SIZE>-36.000000</SIZE>
+					<SIZE>-32.000000</SIZE>
 					<WEIGHT>700</WEIGHT>
 					<LOCALE>en-US</LOCALE>
-					<ALIGN_HORZ>2</ALIGN_HORZ>
 					<ALIGN_VERT>2</ALIGN_VERT>
 				</TEXTFORMAT>
 			</ELEMENT>
@@ -89,7 +88,7 @@
 				<ID>
 					<VALUE>161</VALUE>
 				</ID>
-				<RECT>302, 117, 715, 176</RECT>
+				<RECT>302, 154, 715, 213</RECT>
 				<COLORS>
 					<TEXT_BRUSH>
 						<COLOR>255, 165, 0</COLOR>
@@ -114,7 +113,7 @@
 			</ELEMENT>
 			<ELEMENT>
 				<ELEMENT_NAME>TextIndicator</ELEMENT_NAME>
-				<RECT>283, 205, 425, 235</RECT>
+				<RECT>237, 351, 379, 381</RECT>
 				<COLORS>
 					<TEXT_BRUSH>
 						<COLOR>255, 165, 0</COLOR>
@@ -139,7 +138,7 @@
 			</ELEMENT>
 			<ELEMENT>
 				<ELEMENT_NAME>TextIndicator</ELEMENT_NAME>
-				<RECT>283, 456, 425, 486</RECT>
+				<RECT>237, 600, 379, 630</RECT>
 				<COLORS>
 					<TEXT_BRUSH>
 						<COLOR>255, 165, 0</COLOR>
@@ -164,7 +163,7 @@
 			</ELEMENT>
 			<ELEMENT>
 				<ELEMENT_NAME>TextIndicator</ELEMENT_NAME>
-				<RECT>238, 720, 479, 750</RECT>
+				<RECT>190, 874, 431, 904</RECT>
 				<COLORS>
 					<TEXT_BRUSH>
 						<COLOR>255, 165, 0</COLOR>
@@ -192,7 +191,7 @@
 				<ID>
 					<VALUE>170</VALUE>
 				</ID>
-				<RECT>202, 270, 525, 432</RECT>
+				<RECT>156, 414, 479, 576</RECT>
 				<BACK_BRUSH>
 					<COLOR>0, 0, 0, 0</COLOR>
 				</BACK_BRUSH>
@@ -206,7 +205,8 @@
 				<ID>
 					<VALUE>172</VALUE>
 				</ID>
-				<RECT>202, 526, 525, 688</RECT>
+				<RECT>156, 670, 479, 832</RECT>
+				<ENABLED>FALSE</ENABLED>
 				<BACK_BRUSH>
 					<COLOR>0, 0, 0, 0</COLOR>
 				</BACK_BRUSH>
@@ -220,7 +220,7 @@
 				<ID>
 					<VALUE>174</VALUE>
 				</ID>
-				<RECT>242, 778, 478, 956</RECT>
+				<RECT>194, 936, 430, 1114</RECT>
 				<BACK_BRUSH>
 					<COLOR>0, 0, 0, 0</COLOR>
 				</BACK_BRUSH>
@@ -231,7 +231,7 @@
 			</ELEMENT>
 			<ELEMENT>
 				<ELEMENT_NAME>TextIndicator</ELEMENT_NAME>
-				<RECT>715, 205, 857, 235</RECT>
+				<RECT>669, 351, 811, 381</RECT>
 				<COLORS>
 					<TEXT_BRUSH>
 						<COLOR>255, 165, 0</COLOR>
@@ -244,7 +244,7 @@
 					<COLOR>0, 0, 0, 0</COLOR>
 				</BACK_OUTLINE>
 				<DRAW_FLAGS>2</DRAW_FLAGS>
-				<DATA_VALUE>NETS WARE</DATA_VALUE>
+				<DATA_VALUE>NETS</DATA_VALUE>
 				<TEXTFORMAT>
 					<FAMILY>Arial</FAMILY>
 					<SIZE>-24.000000</SIZE>
@@ -259,7 +259,7 @@
 				<ID>
 					<VALUE>171</VALUE>
 				</ID>
-				<RECT>634, 274, 957, 436</RECT>
+				<RECT>590, 418, 913, 580</RECT>
 				<BACK_BRUSH>
 					<COLOR>0, 0, 0, 0</COLOR>
 				</BACK_BRUSH>
@@ -270,7 +270,7 @@
 			</ELEMENT>
 			<ELEMENT>
 				<ELEMENT_NAME>TextIndicator</ELEMENT_NAME>
-				<RECT>715, 456, 857, 486</RECT>
+				<RECT>641, 603, 868, 633</RECT>
 				<COLORS>
 					<TEXT_BRUSH>
 						<COLOR>255, 165, 0</COLOR>
@@ -283,7 +283,7 @@
 					<COLOR>0, 0, 0, 0</COLOR>
 				</BACK_OUTLINE>
 				<DRAW_FLAGS>2</DRAW_FLAGS>
-				<DATA_VALUE>NETS QR</DATA_VALUE>
+				<DATA_VALUE>PayLab / Pay Now</DATA_VALUE>
 				<TEXTFORMAT>
 					<FAMILY>Arial</FAMILY>
 					<SIZE>-24.000000</SIZE>
@@ -298,7 +298,7 @@
 				<ID>
 					<VALUE>173</VALUE>
 				</ID>
-				<RECT>634, 526, 957, 688</RECT>
+				<RECT>590, 670, 913, 832</RECT>
 				<BACK_BRUSH>
 					<COLOR>0, 0, 0, 0</COLOR>
 				</BACK_BRUSH>
@@ -312,7 +312,7 @@
 				<ID>
 					<VALUE>163</VALUE>
 				</ID>
-				<RECT>541, 36, 677, 111</RECT>
+				<RECT>545, 9, 692, 62</RECT>
 				<COLORS>
 					<TEXT_BRUSH>
 						<COLOR>246, 236, 191</COLOR>
@@ -327,12 +327,170 @@
 				<DRAW_FLAGS>2</DRAW_FLAGS>
 				<TEXTFORMAT>
 					<FAMILY>Arial</FAMILY>
-					<SIZE>-36.000000</SIZE>
+					<SIZE>-32.000000</SIZE>
 					<WEIGHT>700</WEIGHT>
+					<LOCALE>en-US</LOCALE>
+					<ALIGN_VERT>2</ALIGN_VERT>
+				</TEXTFORMAT>
+			</ELEMENT>
+			<ELEMENT>
+				<ELEMENT_NAME>Image</ELEMENT_NAME>
+				<ID>
+					<VALUE>175</VALUE>
+				</ID>
+				<RECT>361, 227, 661, 327</RECT>
+				<BACK_BRUSH>
+					<COLOR>0, 0, 0, 0</COLOR>
+				</BACK_BRUSH>
+				<BACK_OUTLINE>
+					<COLOR>0, 0, 0, 0</COLOR>
+				</BACK_OUTLINE>
+				<DRAW_FLAGS>2</DRAW_FLAGS>
+			</ELEMENT>
+			<ELEMENT>
+				<ELEMENT_NAME>TextIndicator</ELEMENT_NAME>
+				<ID>
+					<VALUE>151</VALUE>
+				</ID>
+				<RECT>384, 62, 529, 112</RECT>
+				<COLORS>
+					<TEXT_BRUSH>
+						<COLOR>0, 255, 127</COLOR>
+					</TEXT_BRUSH>
+				</COLORS>
+				<BACK_BRUSH>
+					<COLOR>0, 0, 0, 0</COLOR>
+				</BACK_BRUSH>
+				<BACK_OUTLINE>
+					<COLOR>0, 0, 0, 0</COLOR>
+				</BACK_OUTLINE>
+				<DRAW_FLAGS>2</DRAW_FLAGS>
+				<DATA_VALUE>VOUCHER:</DATA_VALUE>
+				<TEXTFORMAT>
+					<FAMILY>Arial</FAMILY>
+					<SIZE>-24.000000</SIZE>
+					<WEIGHT>700</WEIGHT>
+					<LOCALE>en-US</LOCALE>
+					<ALIGN_VERT>2</ALIGN_VERT>
+				</TEXTFORMAT>
+			</ELEMENT>
+			<ELEMENT>
+				<ELEMENT_NAME>TextIndicator</ELEMENT_NAME>
+				<ID>
+					<VALUE>153</VALUE>
+				</ID>
+				<RECT>545, 62, 675, 112</RECT>
+				<COLORS>
+					<TEXT_BRUSH>
+						<COLOR>0, 255, 127</COLOR>
+					</TEXT_BRUSH>
+				</COLORS>
+				<BACK_BRUSH>
+					<COLOR>0, 0, 0, 0</COLOR>
+				</BACK_BRUSH>
+				<BACK_OUTLINE>
+					<COLOR>0, 0, 0, 0</COLOR>
+				</BACK_OUTLINE>
+				<DRAW_FLAGS>2</DRAW_FLAGS>
+				<TEXTFORMAT>
+					<FAMILY>Arial</FAMILY>
+					<SIZE>-24.000000</SIZE>
+					<WEIGHT>700</WEIGHT>
+					<LOCALE>en-US</LOCALE>
+					<ALIGN_VERT>2</ALIGN_VERT>
+				</TEXTFORMAT>
+			</ELEMENT>
+			<ELEMENT>
+				<ELEMENT_NAME>TextIndicator</ELEMENT_NAME>
+				<ID>
+					<VALUE>152</VALUE>
+				</ID>
+				<RECT>384, 109, 544, 159</RECT>
+				<COLORS>
+					<TEXT_BRUSH>
+						<COLOR>189, 183, 107</COLOR>
+					</TEXT_BRUSH>
+				</COLORS>
+				<BACK_BRUSH>
+					<COLOR>0, 0, 0, 0</COLOR>
+				</BACK_BRUSH>
+				<BACK_OUTLINE>
+					<COLOR>0, 0, 0, 0</COLOR>
+				</BACK_OUTLINE>
+				<DRAW_FLAGS>2</DRAW_FLAGS>
+				<DATA_VALUE>PAYABLE:</DATA_VALUE>
+				<TEXTFORMAT>
+					<FAMILY>Arial</FAMILY>
+					<SIZE>-28.000000</SIZE>
+					<WEIGHT>700</WEIGHT>
+					<LOCALE>en-US</LOCALE>
+					<ALIGN_VERT>2</ALIGN_VERT>
+				</TEXTFORMAT>
+			</ELEMENT>
+			<ELEMENT>
+				<ELEMENT_NAME>TextIndicator</ELEMENT_NAME>
+				<ID>
+					<VALUE>154</VALUE>
+				</ID>
+				<RECT>545, 108, 675, 158</RECT>
+				<COLORS>
+					<TEXT_BRUSH>
+						<COLOR>255, 165, 0</COLOR>
+					</TEXT_BRUSH>
+				</COLORS>
+				<BACK_BRUSH>
+					<COLOR>0, 0, 0, 0</COLOR>
+				</BACK_BRUSH>
+				<BACK_OUTLINE>
+					<COLOR>0, 0, 0, 0</COLOR>
+				</BACK_OUTLINE>
+				<DRAW_FLAGS>2</DRAW_FLAGS>
+				<TEXTFORMAT>
+					<FAMILY>Arial</FAMILY>
+					<SIZE>-24.000000</SIZE>
+					<WEIGHT>700</WEIGHT>
+					<LOCALE>en-US</LOCALE>
+					<ALIGN_VERT>2</ALIGN_VERT>
+				</TEXTFORMAT>
+			</ELEMENT>
+			<ELEMENT>
+				<ELEMENT_NAME>TextIndicator</ELEMENT_NAME>
+				<RECT>626, 874, 867, 904</RECT>
+				<COLORS>
+					<TEXT_BRUSH>
+						<COLOR>255, 165, 0</COLOR>
+					</TEXT_BRUSH>
+				</COLORS>
+				<BACK_BRUSH>
+					<COLOR>0, 0, 0, 0</COLOR>
+				</BACK_BRUSH>
+				<BACK_OUTLINE>
+					<COLOR>0, 0, 0, 0</COLOR>
+				</BACK_OUTLINE>
+				<DRAW_FLAGS>2</DRAW_FLAGS>
+				<DATA_VALUE>FREE ENTRANCE</DATA_VALUE>
+				<TEXTFORMAT>
+					<FAMILY>Arial</FAMILY>
+					<SIZE>-24.000000</SIZE>
+					<WEIGHT>100</WEIGHT>
 					<LOCALE>en-US</LOCALE>
 					<ALIGN_HORZ>2</ALIGN_HORZ>
 					<ALIGN_VERT>2</ALIGN_VERT>
 				</TEXTFORMAT>
+			</ELEMENT>
+			<ELEMENT>
+				<ELEMENT_NAME>Image</ELEMENT_NAME>
+				<ID>
+					<VALUE>176</VALUE>
+				</ID>
+				<RECT>588, 933, 911, 1116</RECT>
+				<BACK_BRUSH>
+					<COLOR>0, 0, 0, 0</COLOR>
+				</BACK_BRUSH>
+				<BACK_OUTLINE>
+					<COLOR>0, 0, 0, 0</COLOR>
+				</BACK_OUTLINE>
+				<DRAW_FLAGS>2</DRAW_FLAGS>
 			</ELEMENT>
 		</ELEMENTS>
 	</CONTAINER>

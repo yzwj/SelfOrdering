@@ -4,25 +4,33 @@
 #include "CashPop.h"
 #include "QRCodeDlg.h"
 #include "NetsGuideGif.h"
-#include "FlashWindow.h"
 #include "PaymentStatusDlg.h"
+#include "NETSLog.h"
+#include "VoucherList.h"
 //#include "FileUtils.h"
 #ifdef _DEBUG
 #undef THIS_FILE
 static char THIS_FILE[] = __FILE__;
 #define new DEBUG_NEW
 #endif
+paymentModes payModes;
 extern UINT	gCurViewID;
 int gCurSerialNO;
 bool gNETSLogon = false;
 UINT gSerialPortComm = 42;
+extern TRANS_STATUS gTransStatus;
 //FileSession *gpFileSession = NULL;
 extern 	CList<LPORDERINFO, LPORDERINFO>	glstOrder;
 CString szHint;
 int nRedrawCounts = 0;
+int nPaymentTimers = 0;
 #define TIMER_REDRAW					1001
 #define TIMER_TEXT						1002
 #define TIMER_NETS						1003
+#define ID_VOUCHER_TEXT					151
+#define ID_TEXT_PAYABLE					152
+#define ID_TEXT_VOUCHER_PRICE			153
+#define ID_TEXT_PAYABLE_PRICE			154
 #define ID_TEXT_TOTAL					160
 #define ID_TEXT_TIP						161
 #define ID_TEXT_AMOUNT					163
@@ -31,9 +39,8 @@ int nRedrawCounts = 0;
 #define ID_IMAGE_NETS_FLASHPAY			172
 #define ID_IMAGE_NETS_QR				173
 #define ID_IMAGE_COUNTER				174
-CString NETSDebit = _T("c:\\animation ICT250 GIF\\ICT250 NETS.swf");
-CString NETSFlashPay = _T("c:\\animation ICT250 GIF\\ICT250 NETSFlashPay.swf");
-CString NETSQRCode = _T("c:\\animation ICT250 GIF\\ICT250 NETSQRCode.swf");
+#define ID_IMAGE_VOUCHER				175
+#define ID_IMAGE_FREE					176
 IMPLEMENT_SERIAL(CPayContainerCtrl, CBCGPVisualContainerCtrl, 1)
 //////////////////////////////////////////////////////////////////////
 // Construction/Destruction
@@ -58,12 +65,19 @@ CPayContainerCtrl::CPayContainerCtrl()
 	gSerialPortComm = ::GetPrivateProfileInt(L"NETS", L"Port", 0, gIniFile);
 	gNETSLogon = ::GetPrivateProfileInt(L"NETS", L"Logon", 1, gIniFile);
 	m_nPayTryTimes = 0;
-	m_flash = NULL;
+	gTransStatus = TRANS_INIT;
+	m_bConnNETS = FALSE;
+	m_dbDiscount = .0;
+	m_dbPayable = .0;
+}
+CPayContainerCtrl::~CPayContainerCtrl()
+{
 }
 BEGIN_MESSAGE_MAP(CPayContainerCtrl, CBCGPVisualContainerCtrl)
 	//{{AFX_MSG_MAP(CPayContainerCtrl)
 	ON_WM_CREATE()
 	ON_WM_TIMER()
+	ON_MESSAGE(WM_VOUCHER_REDEEM,OnVoucherRedeem)
 	//}}AFX_MSG_MAP
 END_MESSAGE_MAP()
 int CPayContainerCtrl::OnCreate(LPCREATESTRUCT lpCreateStruct)
@@ -72,7 +86,6 @@ int CPayContainerCtrl::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		return -1;
 	CBCGPVisualContainer* pContainer = GetVisualContainer();
 	ASSERT_VALID(pContainer);
-	
 	return 0;
 }
 
@@ -86,8 +99,8 @@ void CPayContainerCtrl::OnTimer(UINT_PTR nIDEvent)
 		{
 			case TRANSACTION_ERROR_STATUS:
 				{
+				    gTransStatus = TRANS_INIT;
 					USES_CONVERSION;
-					m_flash->DestroyDisplayWindow();
 					CPaymentStatusDlg *pTD = new CPaymentStatusDlg(FALSE,A2W(m_NETS.m_ResponseMsg),this);
 					pTD->Create(IDD_PAYMENT_STATUS);
 					pTD->ShowWindow(SW_SHOWNORMAL);
@@ -96,12 +109,22 @@ void CPayContainerCtrl::OnTimer(UINT_PTR nIDEvent)
 				break;
 			case TRANSACTION_COMPLATED_STATUS:
 				{
-					m_flash->DestroyDisplayWindow();
+					gTransStatus = TRANS_INIT;
 					CPaymentStatusDlg *pTD = new CPaymentStatusDlg(TRUE);
 					pTD->Create(IDD_PAYMENT_STATUS);
 					pTD->ShowWindow(SW_SHOWNORMAL);
 					KillTimer(TIMER_NETS);
+					
 				}
+			break;
+			case NO_RESPONSE_STATUS:
+			{
+				gTransStatus = TRANS_INIT;
+				CPaymentStatusDlg *pTD = new CPaymentStatusDlg(FALSE,L"Terminal No Response.",this);
+				pTD->Create(IDD_PAYMENT_STATUS);
+				pTD->ShowWindow(SW_SHOWNORMAL);
+				KillTimer(TIMER_NETS);
+			}
 			break;
 			default:
 				break;
@@ -184,11 +207,14 @@ void CPayContainerCtrl::OnTimer(UINT_PTR nIDEvent)
 void CPayContainerCtrl::InitImage()
 {
 	SetImage(ID_IMAGE_IPAY, IDB_IPAY);
-	SetImage(ID_IMAGE_NETS, IDB_NETS);
+	SetImage(ID_IMAGE_NETS, m_bConnNETS ?IDB_NETS:IDB_NETS_DISABLE);
 	SetImage(ID_IMAGE_COUNTER, IDB_COUNTER);
-	SetImage(ID_IMAGE_NETS_FLASHPAY, IDB_NETS_FLASHPAY);
-	SetImage(ID_IMAGE_NETS_QR, IDB_NETS_QR);
+	SetImage(ID_IMAGE_NETS_FLASHPAY, m_bConnNETS ? IDB_NETS_FLASHPAY: IDB_NETS_FLASHPAY_DISABLE);
+	SetImage(ID_IMAGE_NETS_QR, m_bConnNETS ? IDB_NETS_QR : IDB_NETS_QR_DISABLE);
+	SetImage(ID_IMAGE_VOUCHER, IDB_VOUCHER);
+	SetImage(ID_IMAGE_FREE, IDB_FREE_DISABLE);
 }
+
 void CPayContainerCtrl::SetImage(UINT nID, CString szImagePath)
 {
 	CBCGPVisualContainer* pContainer = GetVisualContainer();
@@ -210,18 +236,24 @@ void CPayContainerCtrl::SetImage(UINT nID, UINT nImageID)
 
 void CPayContainerCtrl::CommandInit()
 {
-	m_dbTotal = 0.;
+	m_dbPayable = m_dbTotal = 0.;
 	CBCGPVisualContainer* pContainer = GetVisualContainer();
 	ASSERT_VALID(pContainer);
+	m_bConnNETS = m_NETS.IsConn(gSerialPortComm);
 	InitImage();
 	for (POSITION pos = glstOrder.GetHeadPosition(); pos!=NULL;)
 	{
 		LPORDERINFO order = glstOrder.GetNext(pos);
 		m_dbTotal += order->productInfo.dbMoney * order->nProductCounts;
 	}
+	m_dbPayable = m_dbTotal;
 	CString szMoney;
 	szMoney.Format(L"$%0.2lf", m_dbTotal);
 	SetTextInfo(ID_TEXT_AMOUNT, szMoney);
+	SetTextEnable(ID_VOUCHER_TEXT, FALSE);
+	SetTextEnable(ID_TEXT_PAYABLE, FALSE);
+	SetTextEnable(ID_TEXT_VOUCHER_PRICE, FALSE);
+	SetTextEnable(ID_TEXT_PAYABLE_PRICE, FALSE);
 	//SetTextInfo(ID_TEXT_TIP, L"PLEASE SELECT PAYMENT");
 	SetTimer(TIMER_REDRAW,600,NULL);
 }
@@ -235,19 +267,44 @@ void CPayContainerCtrl::SetTextInfo(UINT nID, CString szText)
 	pText->SetText(szText);
 	pText->Redraw();
 }
+void CPayContainerCtrl::SetTextEnable(UINT nID, BOOL bEnable)
+{
+	CBCGPVisualContainer* pContainer = GetVisualContainer();
+	ASSERT_VALID(pContainer);
+	CBCGPTextGaugeImpl* pText = DYNAMIC_DOWNCAST(CBCGPTextGaugeImpl, pContainer->GetByID(nID));
+	ASSERT_VALID(pText);
+	pText->SetVisible(bEnable);
+}
+DWORD WINAPI DRAW_GIF(LPVOID lpParam)
+{
+	CPayContainerCtrl * pThis = (CPayContainerCtrl*)lpParam;
+	return 1;
+}
 DWORD WINAPI RECEIPT_THREAD(LPVOID lpParam)
 {
 	CPayContainerCtrl * pThis = (CPayContainerCtrl*)lpParam;
+	nPaymentTimers = 0;
 	while(1)
 	{
-		if (PrintReceipt(true))
+		if (PrintReceipt(false))
 		{
+			TCHAR sBuf[255];
+			CString szPrinter1,szPrinter2;
+			::GetPrivateProfileString(L"PRINTER", L"Printer1", L"", sBuf, 255, gIniFile);
+			szPrinter1 = sBuf;
+			if(!szPrinter1.IsEmpty())
+				printTicket(szPrinter1);
+			::GetPrivateProfileString(L"PRINTER", L"Printer2", L"", sBuf, 255, gIniFile);
+			szPrinter2 = sBuf;
+			if(!szPrinter2.IsEmpty())
+				printTicket(szPrinter2);
 			break;
 		}
 		else
 			Sleep(1000);
 	}
-	::PostMessage(AfxGetMainWnd()->m_hWnd, WM_HOME_VIEW, 0, 0);
+	gCurSerialNO = 0;
+	//::PostMessage(AfxGetApp()->m_pMainWnd->m_hWnd, WM_HOME_VIEW, 0, 0);
 	return 1;
 }
 DWORD WINAPI ThreadNETSDebit(LPVOID lpParam)
@@ -258,16 +315,29 @@ DWORD WINAPI ThreadNETSDebit(LPVOID lpParam)
 		USES_CONVERSION;
 		CString strDate, ECN, strSerialNO,strTryTimes,TransECN;
 		CTime tm; tm = CTime::GetCurrentTime();
-		strDate = tm.Format("S%Y%m%d");
+		strDate = tm.Format("%Y%m%d");
 		strDate = strDate.Right(6);
-		strSerialNO.Format(_T("%03d%02d"), gCurSerialNO,GetCurOrderPayTimes());
+		strSerialNO.Format(_T("%04d%02d"), gCurSerialNO, nPaymentTimers++);
 		ECN = strDate + strSerialNO;
-		pThis->m_NETS.InitPort(gSerialPortComm);
+		if (!pThis->m_NETS.InitPort(gSerialPortComm))
+		{
+			gTransStatus = TRANS_INIT;
+			return 0;
+		}
+		gTransStatus = TRANS_PROCESSING;
 		TransECN = ECN;
-		int bResult = pThis->m_NETS.TransactionNETSDebit(W2A(ECN), pThis->m_dbTotal);
+		CString szLog;
+		NETSLog log;
+		szLog.Format(L"########\t %s  ######## ", TransECN);
+		log.WriteStringToLog(W2A(szLog));
+		int bResult = pThis->m_NETS.TransactionNETSDebit(W2A(ECN), pThis->m_dbPayable);
 		if (bResult == TRANSACTION_COMPLATED_STATUS)
 		{
+			NETSLog log;
+			log.WriteStringToLog("Transaction successful.");
+			log.CloseLog();
 			//success
+			gTransStatus = TRANS_END;
 			if (!SaveOrder(ORDER_PAID))
 			{
 				CString szTip, szError;
@@ -282,30 +352,45 @@ DWORD WINAPI ThreadNETSDebit(LPVOID lpParam)
 		{
 			if (bResult == TRANSACTION_ERROR_STATUS)
 			{
-				///pThis->m_flash->DestroyDisplayWindow();
-				//CPaymentStatusDlg dlg(false);
-				//dlg.DoModal();
+				NETSLog log;
+				log.WriteStringToLog("Transaction failed.");
+				log.CloseLog();
+				gTransStatus = TRANS_END;
+			}
+			else if (bResult == NO_RESPONSE_STATUS)
+			{
+				gTransStatus = TRANS_END;
 			}
 			else if (bResult == TIME_OUT_STATUS)
 			{
+				NETSLog log;
+				CString szLog;
+				szLog = L"Transaction TimeOut & GetLastApproved:" + TransECN;
+				log.WriteStringToLog(W2A(szLog));
+				log.CloseLog();
 				pThis->m_NETS.ClosePort();
 				if (pThis->m_NETS.InitPort(gSerialPortComm))
 				{
-					strSerialNO.Format(_T("%03d%02d"), gCurSerialNO, GetCurOrderPayTimes());
-					ECN = strDate + strSerialNO;
+					//strSerialNO.Format(_T("%04d%02d"), gCurSerialNO, nPaymentTimers++);
+					//ECN = strDate + strSerialNO;
+					strcpy(pThis->m_NETS.m_lastApprovedECN, W2A(TransECN));
 					pThis->m_NETS.GetLastApproved(W2A(ECN));
-					if (bResult == TRANSACTION_COMPLATED_STATUS
-						&& !strncmp(pThis->m_NETS.m_lastApprovedECN, W2A(TransECN), 12)
-						)
+					
+					if (pThis->m_NETS.m_bRecvFlag == TRANSACTION_COMPLATED_STATUS)
 					{
+						NETSLog log;
+						log.WriteStringToLog("LastApproved Attach successful");
+						log.CloseLog();
 						//success
 					//	pThis->m_flash->DestroyDisplayWindow();
+						gTransStatus = TRANS_END;
 						if (!SaveOrder(ORDER_PAID))
 						{
 							CString szTip, szError;
 							szTip.LoadStringW(IDS_SAVE_ORDER_ERROR);
 							szError.LoadStringW(IDS_ERROR_CAPTION);
 							MessageBox(pThis->m_hWnd, szTip, szError, 0);
+
 							return 1;
 						}
 						CreateThread(NULL, 0, RECEIPT_THREAD, pThis, 0, NULL);
@@ -316,13 +401,27 @@ DWORD WINAPI ThreadNETSDebit(LPVOID lpParam)
 					}
 					else
 					{
+						NETSLog log;
+						log.WriteStringToLog("LastApproved Attach failed");
+						log.CloseLog();
+						gTransStatus = TRANS_END;
 						//pThis->m_flash->DestroyDisplayWindow();
 						//CPaymentStatusDlg dlg(false);
 						//dlg.DoModal();
 					}
+
 				}
 			}
 		}
+
+	}
+	else
+	{
+		CString szTip, szError;
+		szTip.LoadStringW(IDS_SAVE_ORDER_ERROR);
+		szError.LoadStringW(IDS_ERROR_CAPTION);
+		MessageBox(pThis->m_hWnd, szTip, szError, 0);
+		return 1;
 	}
 	pThis->m_NETS.ClosePort();
 	return 1;
@@ -335,15 +434,29 @@ DWORD WINAPI ThreadNETSFlashPay(LPVOID lpParam)
 		USES_CONVERSION;
 		CString strDate, ECN, strSerialNO, strTryTimes, TransECN;
 		CTime tm; tm = CTime::GetCurrentTime();
-		strDate = tm.Format("S%Y%m%d");
+		strDate = tm.Format("%Y%m%d");
 		strDate = strDate.Right(6);
-		strSerialNO.Format(_T("%03d%02d"), gCurSerialNO, GetCurOrderPayTimes());
+		strSerialNO.Format(_T("%04d%02d"), gCurSerialNO, nPaymentTimers++);
 		ECN = strDate + strSerialNO;
-		pThis->m_NETS.InitPort(gSerialPortComm);
+		if (!pThis->m_NETS.InitPort(gSerialPortComm))
+		{
+			gTransStatus = TRANS_INIT;
+			return 0;
+		}
+		gTransStatus = TRANS_PROCESSING;
 		TransECN = ECN;
-		int bResult = pThis->m_NETS.TransactionNETSFlashPay(W2A(ECN), pThis->m_dbTotal);
+		CString szLog;
+		NETSLog log;
+		
+		szLog.Format(L"########\t %s  ######## ", TransECN);
+		log.WriteStringToLog(W2A(szLog));
+		int bResult = pThis->m_NETS.TransactionNETSFlashPay(W2A(ECN), pThis->m_dbPayable);
 		if (bResult == TRANSACTION_COMPLATED_STATUS)
 		{
+			NETSLog log;
+			log.WriteStringToLog("Transaction successful.");
+			log.CloseLog();
+			gTransStatus = TRANS_END;
 			//success
 			if (!SaveOrder(ORDER_PAID))
 			{
@@ -357,24 +470,40 @@ DWORD WINAPI ThreadNETSFlashPay(LPVOID lpParam)
 		}
 		else
 		{
+		
 			if (bResult == TRANSACTION_ERROR_STATUS)
 			{
-				///pThis->m_flash->DestroyDisplayWindow();
-				//CPaymentStatusDlg dlg(false);
-				//dlg.DoModal();
+				NETSLog log;
+				log.WriteStringToLog("Transaction failed");
+				log.CloseLog();
+				gTransStatus = TRANS_END;
+			}
+			else if (bResult == NO_RESPONSE_STATUS)
+			{
+				gTransStatus = TRANS_END;
 			}
 			else if (bResult == TIME_OUT_STATUS)
 			{
+				NETSLog log;
+				CString szLog;
+				szLog = L"Transaction TimeOut & GetLastApproved:" + TransECN;
+				log.WriteStringToLog(W2A(szLog));
+				log.CloseLog();
 				pThis->m_NETS.ClosePort();
 				if (pThis->m_NETS.InitPort(gSerialPortComm))
 				{
-					strSerialNO.Format(_T("%03d%02d"), gCurSerialNO, GetCurOrderPayTimes());
-					ECN = strDate + strSerialNO;
+					//strSerialNO.Format(_T("%04d%02d"), gCurSerialNO, nPaymentTimers++);
+					//ECN = strDate + strSerialNO;
+					
+					strcpy(pThis->m_NETS.m_lastApprovedECN, W2A(TransECN));
 					pThis->m_NETS.GetLastApproved(W2A(ECN));
-					if (bResult == TRANSACTION_COMPLATED_STATUS
-						&& !strncmp(pThis->m_NETS.m_lastApprovedECN, W2A(TransECN), 12)
-						)
+
+					if (pThis->m_NETS.m_bRecvFlag == TRANSACTION_COMPLATED_STATUS)
 					{
+						NETSLog log;
+						log.WriteStringToLog("LastApproved Attach successful");
+						log.CloseLog();
+						gTransStatus = TRANS_END;
 						//success
 						//	pThis->m_flash->DestroyDisplayWindow();
 						if (!SaveOrder(ORDER_PAID))
@@ -393,35 +522,63 @@ DWORD WINAPI ThreadNETSFlashPay(LPVOID lpParam)
 					}
 					else
 					{
+						NETSLog log;
+						log.WriteStringToLog("LastApproved Attach failed");
+						log.CloseLog();
+						gTransStatus = TRANS_END;
 						//pThis->m_flash->DestroyDisplayWindow();
 						//CPaymentStatusDlg dlg(false);
 						//dlg.DoModal();
 					}
 				}
 			}
+			
 		}
+		
 	}
+	else
+	{
+		CString szTip, szError;
+		szTip.LoadStringW(IDS_SAVE_ORDER_ERROR);
+		szError.LoadStringW(IDS_ERROR_CAPTION);
+		MessageBox(pThis->m_hWnd, szTip, szError, 0);
+		return 1;
+	}
+	
 	pThis->m_NETS.ClosePort();
 	return 1;
 }
 DWORD WINAPI ThreadNETSQRCode(LPVOID lpParam)
 {
 	CPayContainerCtrl * pThis = (CPayContainerCtrl*)lpParam;
-	if (gNETSLogon)
+	if (gNETSLogon )
 	{
 		USES_CONVERSION;
 		CString strDate, ECN, strSerialNO, strTryTimes, TransECN;
 		CTime tm; tm = CTime::GetCurrentTime();
-		strDate = tm.Format("S%Y%m%d");
+		strDate = tm.Format("%Y%m%d");
 		strDate = strDate.Right(6);
-		strSerialNO.Format(_T("%03d%02d"), gCurSerialNO, GetCurOrderPayTimes());
+		strSerialNO.Format(_T("%04d%02d"), gCurSerialNO, nPaymentTimers++);
 		ECN = strDate + strSerialNO;
-		pThis->m_NETS.InitPort(gSerialPortComm);
+		if (!pThis->m_NETS.InitPort(gSerialPortComm))
+		{
+			gTransStatus = TRANS_INIT;
+			return 0;
+		}
+		gTransStatus = TRANS_PROCESSING;
 		TransECN = ECN;
-		int bResult = pThis->m_NETS.TransactionNETSQRCode(W2A(ECN), pThis->m_dbTotal);
+		CString szLog;
+		NETSLog log;
+		szLog.Format(L"########\t %s  ######## ", TransECN);
+		log.WriteStringToLog(W2A(szLog));
+		int bResult = pThis->m_NETS.TransactionNETSQRCode(W2A(ECN), pThis->m_dbPayable);
 		if (bResult == TRANSACTION_COMPLATED_STATUS)
 		{
+			NETSLog log;
+			log.WriteStringToLog("Transaction successful.");
+			log.CloseLog();
 			//success
+			gTransStatus = TRANS_END;
 			if (!SaveOrder(ORDER_PAID))
 			{
 				CString szTip, szError;
@@ -436,22 +593,37 @@ DWORD WINAPI ThreadNETSQRCode(LPVOID lpParam)
 		{
 			if (bResult == TRANSACTION_ERROR_STATUS)
 			{
-				///pThis->m_flash->DestroyDisplayWindow();
-				//CPaymentStatusDlg dlg(false);
-				//dlg.DoModal();
+				NETSLog log;
+				log.WriteStringToLog("Transaction failed");
+				log.CloseLog();
+				gTransStatus = TRANS_END;
+			}
+			else if (bResult == NO_RESPONSE_STATUS)
+			{
+				gTransStatus = TRANS_END;
 			}
 			else if (bResult == TIME_OUT_STATUS)
 			{
+				NETSLog log;
+				CString szLog;
+				szLog = L"Transaction TimeOut & GetLastApproved:" + TransECN;
+				log.WriteStringToLog(W2A(szLog));
+				log.CloseLog();
 				pThis->m_NETS.ClosePort();
 				if (pThis->m_NETS.InitPort(gSerialPortComm))
 				{
-					strSerialNO.Format(_T("%03d%02d"), gCurSerialNO, GetCurOrderPayTimes());
-					ECN = strDate + strSerialNO;
+					//strSerialNO.Format(_T("%04d%02d"), gCurSerialNO, nPaymentTimers++);
+					//ECN = strDate + strSerialNO;
+					strcpy(pThis->m_NETS.m_lastApprovedECN, W2A(TransECN));
+
 					pThis->m_NETS.GetLastApproved(W2A(ECN));
-					if (bResult == TRANSACTION_COMPLATED_STATUS
-						&& !strncmp(pThis->m_NETS.m_lastApprovedECN, W2A(TransECN), 12)
-						)
+
+					if (pThis->m_NETS.m_bRecvFlag == TRANSACTION_COMPLATED_STATUS)
 					{
+						NETSLog log;
+						log.WriteStringToLog("LastApproved Attach successful");
+						log.CloseLog();
+						gTransStatus = TRANS_END;
 						//success
 						//	pThis->m_flash->DestroyDisplayWindow();
 						if (!SaveOrder(ORDER_PAID))
@@ -469,13 +641,27 @@ DWORD WINAPI ThreadNETSQRCode(LPVOID lpParam)
 					}
 					else
 					{
+						NETSLog log;
+						log.WriteStringToLog("LastApproved Attach failed");
+						log.CloseLog();
+						gTransStatus = TRANS_END;
 						//pThis->m_flash->DestroyDisplayWindow();
 						//CPaymentStatusDlg dlg(false);
 						//dlg.DoModal();
 					}
+					
 				}
 			}
+			
 		}
+	}
+	else
+	{
+		CString szTip, szError;
+		szTip.LoadStringW(IDS_SAVE_ORDER_ERROR);
+		szError.LoadStringW(IDS_ERROR_CAPTION);
+		MessageBox(pThis->m_hWnd, szTip, szError, 0);
+		return 1;
 	}
 	pThis->m_NETS.ClosePort();
 	return 1;
@@ -489,81 +675,53 @@ BOOL CPayContainerCtrl::OnMouseDown(int nButton, const CBCGPPoint& pt)
 	{
 		CBCGPBaseVisualObject* pObject = pContainer->GetFromPoint(pt);
 		CBCGPImageGaugeImpl* pImage = DYNAMIC_DOWNCAST(CBCGPImageGaugeImpl, pObject);
-		if (pImage != NULL && pImage->GetID() == ID_IMAGE_IPAY)
+		if (pImage != NULL && pImage->GetID() == ID_IMAGE_VOUCHER)
 		{
-			gCurSerialNO = getnewFreeID(gpDB, _T("y_order_list"), _T("OrderID"));
+			CVoucherList *pTD = new CVoucherList(this);
+			pTD->Create(IDD_DIALOG_VOUCHERS);
+			pTD->ShowWindow(SW_SHOWNORMAL);
+		}
+		if (pImage != NULL && m_dbPayable >0.0 && pImage->GetID() == ID_IMAGE_IPAY)
+		{
+			payModes = EWALLET;
 			CString szText;
 			szText.Format(L"%d", gCurSerialNO);
 			if (GenerateQRCode(szText))
 			{
-				CQRCodeDlg *pTD = new CQRCodeDlg();
+				CQRCodeDlg *pTD = new CQRCodeDlg(this);
 				pTD->Create(IDD_SHOW_QRCODE); 
 				pTD->ShowWindow(SW_SHOWNORMAL);
 			}
 		}
-		else if (pImage != NULL && pImage->GetID() == ID_IMAGE_NETS)
+		else if (m_bConnNETS && m_dbPayable >0.0 && pImage != NULL && pImage->GetID() == ID_IMAGE_NETS)
 		{	
-			gCurSerialNO = getnewFreeID(gpDB, _T("y_order_list"), _T("OrderID"));
-			m_flash = new CFlashWindow;
-			int result = m_flash->CreateDisplayWindow(
-				m_hWnd,
-				GetModuleHandle(NULL),
-				CRect(0, 0, 1920, 1080),
-				NETSDebit,
-				0
-			);
-			if (!result)
-			{
-				delete m_flash;
-				m_flash = NULL;
-				return NULL;
-			}
-			m_flash->SetWindowTopMost();
-			m_flash->PlayFlash();
+			gTransStatus = TRANS_START;
+			CNETSGuideGif *gif = new CNETSGuideGif(IDR_GIF_NETSDEBIT);
+			gif->Create(IDD_DIALOG_GIF);
+			gif->ShowWindow(SW_SHOW);
 			CreateThread(NULL, 0, ThreadNETSDebit, this, 0, NULL);
 			SetTimer(TIMER_NETS, 1000, NULL);
+			payModes = NETS;
 		}
-		else if (pImage != NULL && pImage->GetID() == ID_IMAGE_NETS_FLASHPAY)
+		else if (m_bConnNETS && m_dbPayable >0.0 && pImage != NULL && pImage->GetID() == ID_IMAGE_NETS_FLASHPAY)
 		{
-			gCurSerialNO = getnewFreeID(gpDB, _T("y_order_list"), _T("OrderID"));
-			m_flash = new CFlashWindow;
-			int result = m_flash->CreateDisplayWindow(
-				m_hWnd,
-				GetModuleHandle(NULL),
-				CRect(0, 0, 1920, 1080),
-				NETSFlashPay,
-				0
-			);
-			if (!result)
-			{
-				delete m_flash;
-				m_flash = NULL;
-				return NULL;
-			}
-			m_flash->SetWindowTopMost();
-			m_flash->PlayFlash();
+			gTransStatus = TRANS_START;
+			CNETSGuideGif *gif = new CNETSGuideGif(IDR_GIF_NETSFLASHPAY);
+			gif->Create(IDD_DIALOG_GIF);
+			gif->ShowWindow(SW_SHOW);
+			//CreateThread(NULL, 0, DRAW_GIF, this, 0, NULL);
 			CreateThread(NULL, 0, ThreadNETSFlashPay, this, 0, NULL);	
 			SetTimer(TIMER_NETS, 1000, NULL);
+			payModes = NETS;
 		}
-		else if (pImage != NULL && pImage->GetID() == ID_IMAGE_NETS_QR)
+		else if (m_bConnNETS && m_dbPayable >0.0 && pImage != NULL && pImage->GetID() == ID_IMAGE_NETS_QR)
 		{
-			gCurSerialNO = getnewFreeID(gpDB, _T("y_order_list"), _T("OrderID"));
-			m_flash = new CFlashWindow;
-			int result = m_flash->CreateDisplayWindow(
-				m_hWnd,
-				GetModuleHandle(NULL),
-				CRect(0, 0, 1920, 1080),
-				NETSQRCode,
-				0
-			);
-			if (!result)
-			{
-				delete m_flash;
-				m_flash = NULL;
-				return NULL;
-			}
-			m_flash->SetWindowTopMost();
-			m_flash->PlayFlash();
+			payModes = NETS;
+			gTransStatus = TRANS_START;
+			CNETSGuideGif *gif = new CNETSGuideGif(IDR_GIF_NETSQRCODE);
+			gif->Create(IDD_DIALOG_GIF);
+			gif->ShowWindow(SW_SHOW);
+			//CreateThread(NULL, 0, DRAW_GIF, this, 0, NULL);
 			CreateThread(NULL, 0, ThreadNETSQRCode, this, 0, NULL);
 			SetTimer(TIMER_NETS, 1000, NULL);
 			/*if (!szHint.IsEmpty())
@@ -578,34 +736,45 @@ BOOL CPayContainerCtrl::OnMouseDown(int nButton, const CBCGPPoint& pt)
 				szHint = "Hello world!";
 			SetTimer(TIMER_TEXT, 50, NULL);*/
 		}
-		else if (pImage != NULL && pImage->GetID() == ID_IMAGE_COUNTER)
+		else if (m_dbPayable >0.0 && pImage != NULL && pImage->GetID() == ID_IMAGE_COUNTER)
 		{
-			gCurSerialNO = getnewFreeID(gpDB, _T("y_order_list"), _T("OrderID"));
+			payModes = UNKNOW;
+			if (SaveOrder(ORDER_COUNTER))
+			{
+				CreateThread(NULL, 0, RECEIPT_THREAD, this, 0, NULL);
+				CBCGPPopupWindow* pPopup = new CBCGPPopupWindow;
+				CBCGPPopupWindowColors customColors;
+				customColors.clrFill = RGB(103, 109, 134);
+				customColors.clrText = RGB(255, 255, 255);
+				customColors.clrBorder = RGB(103, 109, 134);
+				customColors.clrLink = RGB(0, 255, 0);
+				customColors.clrHoverLink = RGB(254, 233, 148);
+				pPopup->SetCustomTheme(customColors);
+				pPopup->SetAnimationType(
+					CBCGPPopupMenu::SYSTEM_DEFAULT_ANIMATION);
+				pPopup->SetTransparency((BYTE)255);
+				pPopup->SetSmallCaption(FALSE);
+				pPopup->SetSmallCaptionGripper(FALSE);
+				pPopup->SetAutoCloseTime(5000);
+				pPopup->SetRoundedCorners();
+				pPopup->SetShadow();
+				pPopup->EnablePinButton(FALSE);
+				CPoint ptLocation(-1, -1);
+				ptLocation.x = GetSystemMetrics(SM_CYSCREEN) / 2;
+				ptLocation.y = GetSystemMetrics(SM_CXSCREEN) / 2;
+				pPopup->EnableCloseButton(FALSE);
+				pPopup->Create(this, IDD_CASH_POP,
+					NULL, ptLocation, RUNTIME_CLASS(CCashPop));
+				pPopup->CenterWindow();
+			}
+			
+		}
+		else if (m_dbPayable <= 0.0 && pImage != NULL && pImage->GetID() == ID_IMAGE_FREE)
+		{
+			CPaymentStatusDlg *pTD = new CPaymentStatusDlg(TRUE);
+			pTD->Create(IDD_PAYMENT_STATUS);
+			pTD->ShowWindow(SW_SHOWNORMAL);
 			CreateThread(NULL, 0, RECEIPT_THREAD, this, 0, NULL);
-			CBCGPPopupWindow* pPopup = new CBCGPPopupWindow;
-			CBCGPPopupWindowColors customColors;
-			customColors.clrFill = RGB(103, 109, 134);
-			customColors.clrText = RGB(255, 255, 255);
-			customColors.clrBorder = RGB(103, 109, 134);
-			customColors.clrLink = RGB(0, 255, 0);
-			customColors.clrHoverLink = RGB(254, 233, 148);
-			pPopup->SetCustomTheme(customColors);
-			pPopup->SetAnimationType(
-				CBCGPPopupMenu::SYSTEM_DEFAULT_ANIMATION);
-			pPopup->SetTransparency((BYTE)255);
-			pPopup->SetSmallCaption(FALSE);
-			pPopup->SetSmallCaptionGripper(FALSE);
-			pPopup->SetAutoCloseTime(5000);
-			pPopup->SetRoundedCorners();
-			pPopup->SetShadow();
-			pPopup->EnablePinButton(FALSE);
-			CPoint ptLocation(-1, -1);
-			ptLocation.x = GetSystemMetrics(SM_CYSCREEN) / 2;
-			ptLocation.y = GetSystemMetrics(SM_CXSCREEN) / 2;
-			pPopup->EnableCloseButton(FALSE);
-			pPopup->Create(this, IDD_CASH_POP,
-				NULL, ptLocation, RUNTIME_CLASS(CCashPop));
-			pPopup->CenterWindow();
 		}
 	}
 	return FALSE;
@@ -635,4 +804,34 @@ void CPayContainerCtrl::OnDraw(CBCGPGraphicsManager * pGM, const CBCGPRect & rec
 		m_brText.SetPenAttributes(4, PS_SOLID);
 		pGM->DrawText(szHint, rectText, m_textFormat, m_brText);
 	}
+}
+
+LRESULT CPayContainerCtrl::OnVoucherRedeem(WPARAM wParam, LPARAM lpParam)
+{
+	int nVoucherID = lpParam;
+	m_dbDiscount = RedeemVoucherIncomePrice(nVoucherID, m_dbTotal);
+	CString szDiscount,szPayable;
+	szDiscount.Format(L"-$%0.2lf", m_dbDiscount);
+	m_dbPayable = m_dbTotal - m_dbDiscount;
+	if (m_dbPayable <= 0.000001)
+		m_dbPayable = 0.0;
+	szPayable.Format(L"$%0.2lf", m_dbPayable);
+	SetTextInfo(ID_TEXT_VOUCHER_PRICE, szDiscount);
+	SetTextInfo(ID_TEXT_PAYABLE_PRICE, szPayable);
+	SetTextEnable(ID_VOUCHER_TEXT, TRUE);
+	SetTextEnable(ID_TEXT_PAYABLE, TRUE);
+	SetTextEnable(ID_TEXT_VOUCHER_PRICE, TRUE);
+	SetTextEnable(ID_TEXT_PAYABLE_PRICE, TRUE);
+	if (m_dbPayable <= 0.0)
+	{
+
+		SetImage(ID_IMAGE_NETS, IDB_NETS_DISABLE);
+		SetImage(ID_IMAGE_NETS_FLASHPAY, IDB_NETS_FLASHPAY_DISABLE);
+		SetImage(ID_IMAGE_NETS_QR,IDB_NETS_QR_DISABLE);
+		SetImage(ID_IMAGE_IPAY,IDB_IPAY_DISABLE);
+		SetImage(ID_IMAGE_COUNTER,IDB_COUNTER_DISABLE);
+		SetImage(ID_IMAGE_FREE, IDB_FREE);
+	}
+	RedrawWindow();
+	return 0;
 }

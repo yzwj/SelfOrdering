@@ -40,11 +40,12 @@ protected:
 	CBCGPBrush					m_brFill;
 	CString						m_szProduct;
 	CString						m_szSize;
-	double						m_dbTeaMoney;
+	double						m_dbUnitMenoy;
 	CString						m_szIce;
 	CString						m_szHoney;
-	CString						m_szTopping;
+	std::vector<CString>		m_szTopping;
 	CString						m_szToppingMoney;
+	double						m_dbSizeMoney;
 	double						m_dbToppingMoney;
 	double						m_dbUnit;
 };

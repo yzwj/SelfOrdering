@@ -24,6 +24,8 @@ extern UINT	gCurViewID;
 
 PRODUCTINFO gCurProduct ;
 extern 	CList<LPORDERINFO, LPORDERINFO>	glstOrder;
+extern  CList<LPTOPPINGINFO, LPTOPPINGINFO>	glstTopping;
+extern  CList<LPSIZEINFO, LPSIZEINFO>	glstSize;
 extern int gCurOrderIndex;
 
 // Cyoda_self_orderingView
@@ -85,6 +87,7 @@ Cyoda_self_orderingView::Cyoda_self_orderingView()
 	// TODO: add construction code here
 	gCurViewID = 0;
 	m_bEditOrder = FALSE;
+	m_bClickCart = FALSE;
 }
 
 Cyoda_self_orderingView::~Cyoda_self_orderingView()
@@ -282,11 +285,98 @@ void Cyoda_self_orderingView::ShowView(int nViewID)
 		break;
 	}	
 }
+BOOL Cyoda_self_orderingView::InitCfg()
+{
+	glstTopping.RemoveAll();
+	glstSize.RemoveAll();
+	CString szSQL;
+	szSQL.Format(L"select * from y_Item where cat_no = 11");
+	CAdoRecordSet recordset;
+	recordset.SetAdoConnection(gpDB);
+	recordset.SetCursorLocation();
+	try
+	{
+		if (!recordset.Open(szSQL))
+		{
+			return FALSE;
+		}
+	}
+	catch (_com_error e)
+	{
+		return FALSE;
+	}
+
+	int nCount = recordset.GetRecordCount();
+	if (nCount <= 0)
+	{
+		recordset.Close();
+		return FALSE;
+	}
+	CString szName, szNameCN,szCode;
+	int  nID;
+	double dbPrice;
+	while (!recordset.IsEOF())
+	{
+		LPTOPPINGINFO pTopping = new TOPPINGINFO();
+		recordset.GetFieldValue("item_code", szCode);
+		recordset.GetFieldValue("item_no", nID);
+		recordset.GetFieldValue("item_desc", szName);
+		recordset.GetFieldValue("zh_name", szNameCN);
+		recordset.GetFieldValue("unit_price", dbPrice);
+		pTopping->szItemName = szName;
+		pTopping->szItemNameCN = szNameCN;
+		pTopping->szItemCode = szCode;
+		pTopping->nItemId = nID;
+		pTopping->ItemPrice = dbPrice;
+		glstTopping.AddTail(pTopping);
+		recordset.MoveNext();
+	}
+	recordset.Close();
+	szSQL.Format(L"select * from y_Item where cat_no = 10");
+	recordset.SetAdoConnection(gpDB);
+	recordset.SetCursorLocation();
+	try
+	{
+		if (!recordset.Open(szSQL))
+		{
+			return FALSE;
+		}
+	}
+	catch (_com_error e)
+	{
+		return FALSE;
+	}
+
+	nCount = recordset.GetRecordCount();
+	if (nCount <= 0)
+	{
+		recordset.Close();
+		return FALSE;
+	}
+	while (!recordset.IsEOF())
+	{
+		LPSIZEINFO pSize = new SIZEINFO();
+		recordset.GetFieldValue("item_code", szCode);
+		recordset.GetFieldValue("item_no", nID);
+		recordset.GetFieldValue("item_desc", szName);
+		recordset.GetFieldValue("zh_name", szNameCN);
+		recordset.GetFieldValue("unit_price", dbPrice);
+		pSize->szItemName = szName;
+		pSize->szItemNameCN = szNameCN;
+		pSize->szItemCode = szCode;
+		pSize->nItemId = nID;
+		pSize->ItemPrice = dbPrice;
+		glstSize.AddTail(pSize);
+		recordset.MoveNext();
+	}
+	recordset.Close();
+	return TRUE;
+}
 BOOL Cyoda_self_orderingView::InitCategroy()
 {
 	m_lstCategroy.RemoveAll();
 	CString szSQL;
-	szSQL.Format(L"select * from y_category");
+	szSQL.Format(L"select * from y_category where isShow = 'Y'");
 	CAdoRecordSet recordset;
 	recordset.SetAdoConnection(gpDB);
 	recordset.SetCursorLocation();
@@ -361,7 +451,7 @@ BOOL Cyoda_self_orderingView::InitProduct()
 		recordset.Close();
 		return FALSE;
 	}
-	CString szName, szPath, szFile,szThumbFile, szNameCN,szFileCN;
+	CString szName, szPath, szFile,szThumbFile, szNameCN,szFileCN,szCode,szPrinter;
 	int  nCategroy,nProduct, nTextColor, nBackgroundColor;
 	BOOL bShowSugar, bShowHoney,bShowIce,bShowSize;
 	double dbMoney;
@@ -370,6 +460,7 @@ BOOL Cyoda_self_orderingView::InitProduct()
 		PRODUCTINFO* pProduct = new PRODUCTINFO();
 		recordset.GetFieldValue("cat_no", nCategroy);
 		recordset.GetFieldValue("item_no", nProduct);
+		recordset.GetFieldValue("item_code", szCode);
 		recordset.GetFieldValue("item_desc", szName);
 		recordset.GetFieldValue("zh_name", szNameCN);
 		recordset.GetFieldValue("image_path", szPath);
@@ -382,10 +473,12 @@ BOOL Cyoda_self_orderingView::InitProduct()
 		recordset.GetFieldValue("show_honey_level", bShowHoney);
 		recordset.GetFieldValue("show_ice", bShowIce);
 		recordset.GetFieldValue("show_size", bShowSize);
-		recordset.GetFieldValue("normal_size_price", dbMoney);
+		recordset.GetFieldValue("unit_price", dbMoney);
+		recordset.GetFieldValue("printer_name", szPrinter);
 
 		pProduct->nCategroyID = nCategroy;
 		pProduct->nProductID = nProduct;
+		pProduct->szItemCode = szCode;
 		pProduct->szProductName = szName;
 		pProduct->szProductNameCN = szNameCN;
 		pProduct->szProductFileName = szPath+szFile;
@@ -396,10 +489,11 @@ BOOL Cyoda_self_orderingView::InitProduct()
 		pProduct->bShowHoneyLevel = bShowHoney;
 		pProduct->bShowIce = bShowIce;
 		pProduct->bShowSize = bShowSize;
+		pProduct->szPrinter = szPrinter;
 		if (szThumbFile.IsEmpty())
 			pProduct->szProductThumbFile = pProduct->szProductFileName;
 		else pProduct->szProductThumbFile = szPath+szThumbFile;
-		pProduct->dbTeaMoney = pProduct->dbMoney = dbMoney;
+		pProduct->dbUnitMenoy = pProduct->dbMoney = dbMoney;
 		m_lstProduct.AddTail(pProduct);
 		recordset.MoveNext();
 	}
@@ -510,7 +604,7 @@ void Cyoda_self_orderingView::EnablePaymentButton()
 	CBCGPWinUITilesCaptionButton* pCaptionButtonPayment = new CBCGPWinUITilesCaptionButton(ID_PAYMENT);
 	pCaptionButtonPayment->SetName(gbChinese ? _T("付款") : _T("PAY"));
 	pCaptionButtonPayment->SetRightAligned();
-	CBCGPImage image1(IDB_NEXT);
+	CBCGPImage image1(IDB_CAPTION_PAY_BUTTON);
 	pCaptionButtonPayment->SetImage(image1);
 	pUITiles->AddCaptionButton(pCaptionButtonPayment);
 }
@@ -586,6 +680,16 @@ LRESULT Cyoda_self_orderingView::OnClickCaptionButton(WPARAM /*wp*/, LPARAM lp)
 	}
 	else if (pButton->GetCommandID() == ID_CART)
 	{
+		m_bClickCart = TRUE;
+		CBCGPWinUITiles* pUITiles = m_wndUITiles.GetWinUITiles();
+		ASSERT_VALID(pUITiles);
+		pUITiles->RemoveTiles();
+		pUITiles->RemoveCaptionButtons();
+		EnableBackButton();
+		EnableHomeButton();
+		EnableNextButton();
+		pUITiles->SetFillBrush(CBCGPBrush(CBCGPColor::Black));
+
 		ShowView(ID_VIEW_CHECK_ORDERING);
 	}
 	else if (pButton->GetCommandID() == ID_PAYMENT)
@@ -751,7 +855,7 @@ LRESULT Cyoda_self_orderingView::OnCreateView(WPARAM, LPARAM lp)
 		ASSERT_VALID(pUITiles);
 		if(!gCurProduct.szProductName.IsEmpty())
 		{
-			if (!m_bEditOrder)
+			if (!m_bEditOrder && !m_bClickCart)
 			{
 				LPORDERINFO orderinfo = new ORDERINFO();
 				orderinfo->productInfo = gCurProduct;
@@ -771,13 +875,15 @@ LRESULT Cyoda_self_orderingView::OnCreateView(WPARAM, LPARAM lp)
 				}
 				m_bEditOrder = FALSE;
 			}
+			
 			gCurProduct.clear();
 		}
+		m_bClickCart = FALSE;
 		pOrderView->OnInitOrder();
 		pUITiles->RemoveTiles();
 		pUITiles->RemoveCaptionButtons();
 		EnableHomeButton();
-		EnablePaymentButton();
+		//EnablePaymentButton();
 		pUITiles->SetDirty(TRUE, TRUE);
 		gCurViewID = ID_VIEW_CHECK_ORDERING;
 	}
@@ -790,9 +896,9 @@ LRESULT Cyoda_self_orderingView::OnCreateView(WPARAM, LPARAM lp)
 		pUITiles->RemoveTiles();
 		pUITiles->RemoveCaptionButtons();
 		EnableHomeButton();
+		EnableCartButton();
 		pUITiles->SetDirty(TRUE, TRUE);
 		gCurViewID = ID_VIEW_PAYMENT;
-		
 	}
 	CHomeContainerCtrl* pHomeView = DYNAMIC_DOWNCAST(CHomeContainerCtrl, pView);
 	if (pHomeView)
@@ -847,6 +953,7 @@ int Cyoda_self_orderingView::OnCreate(LPCREATESTRUCT lpCreateStruct)
 		MessageBox(L"INIT MENU ERROR.", L"ERROR", 0);
 		exit(0);
 	}
+	InitCfg();
 	InitUITiles();
 	//CreateCategory();
 	ShowView(ID_VIEW_HOME);
@@ -881,76 +988,43 @@ BOOL GetDefaultPrinterAndPaper(LPTSTR szPrinterName, int nPrintNameBufferLen, LP
 	}
 	return (*szPrinterName && *szPaperName);
 }
-bool Cyoda_self_orderingView::printTicket()
-{
-	DOCINFO     di;
-	CDC             dc;
-	HDC             hDC;
-	ZeroMemory(&di, sizeof(DOCINFO));
-	di.cbSize = sizeof(DOCINFO);
-	di.lpszDocName = _T("order");
-	di.fwType = DI_APPBANDING;
-	CString szName, szPaper;
-	GetDefaultPrinterAndPaper(szName.GetBuffer(0), 11, szPaper.GetBuffer(0));
-	hDC = CreateDC(NULL, L"TSC TDP-225", NULL, NULL);
-	dc.Attach(hDC);
-	dc.StartDoc(&di);
-	dc.StartPage();
-	dc.TextOut(10, 10, _T("Ordering"));
-	dc.EndPage();
-	dc.EndDoc();
-	dc.DeleteDC();
 
-	return TRUE;
-	/*
-	HDC hdcprint;
-	static DOCINFO di = { sizeof(DOCINFO), (LPTSTR)TEXT("order"), NULL };
-	CString name = "TSC TDP-225";
-	if ((hdcprint = CreateDC(_T("WINSPOOL "), name, NULL, NULL)) != 0)
-	{
-		if (StartDoc(hdcprint, &di) > 0)
-		{
-			StartPage(hdcprint);         //打印机走纸,开始打印
-			SaveDC(hdcprint);            //保存打印机设备句柄 
-			int xDistance = 20;   //左边距
-								  //设置字体
-			LOGFONT logfont;
-			ZeroMemory(&logfont, sizeof(LOGFONT));
-			logfont.lfCharSet = DEFAULT_CHARSET;
-			logfont.lfPitchAndFamily = DEFAULT_PITCH;
-			logfont.lfWeight = FW_NORMAL;  //字体重量，正常
-			logfont.lfHeight = 20;         //字体高度
-			logfont.lfWidth = 12;           //字体宽度  
-
-			HFONT hFont = ::CreateFontIndirect(&logfont);
-			SelectObject(hdcprint, hFont);
-			//获取打印内容并进行类型转换
-			CString content = "This is print content";
-			int length = content.GetLength();
-			//打印
-			Escape(hdcprint,STARTDOC,8,"Test - Doc",NULL);
-			TextOut(hdcprint,50,50, content, length);
-			Escape(hdcprint, NEWFRAME, 0,NULL, NULL);
-			Escape(hdcprint, ENDDOC, 0, NULL, NULL);
-			//恢复打印机设备句柄
-			RestoreDC(hdcprint, -1);
-			//打印机停纸,停止打印			
-			EndPage(hdcprint);
-			//结束一个打印作业			
-			EndDoc(hdcprint);
-		}
-	
-		//用API函数DeleteDC销毁一个打印机设备句柄
-		DeleteDC(hdcprint);
-	}
-	else {
-		return false;
-	}*/
-	return true;
-}
 void Cyoda_self_orderingView::OnSize(UINT nType, int cx, int cy)
 {
 	CView::OnSize(nType, cx, cy);
 	m_wndUITiles.SetWindowPos(NULL, 0, 0, cx, cy, SWP_NOMOVE | SWP_NOZORDER | SWP_NOACTIVATE);
 	// TODO: Add your message handler code here
+}
+
+CString Cyoda_self_orderingView::GetProductName(std::vector<int> product_list)
+{
+	CString szPorduct;
+	for (POSITION pos = m_lstProduct.GetHeadPosition();pos!=NULL;)
+	{
+		PRODUCTINFO* product = m_lstProduct.GetNext(pos);
+		for (int i = 0; i < product_list.size(); i++)
+		{
+			if (product->nProductID == product_list[i])
+			{
+				szPorduct += product->szProductName + L",";
+			}
+		}
+	}
+	return szPorduct.TrimRight(',');
+}
+CString Cyoda_self_orderingView::GetCategroyName(std::vector<int> category_id)
+{
+	CString szCategory;
+	for (POSITION pos = m_lstCategroy.GetHeadPosition(); pos != NULL;)
+	{
+		LPCATEGROYINFO categroy = m_lstCategroy.GetNext(pos);
+		for (int i = 0; i < category_id.size(); i++)
+		{
+			if (categroy->nCategroyID == category_id[i])
+			{
+				szCategory += categroy->szCategroyName + L",";
+			}
+		}
+	}
+	return szCategory.TrimRight(',');
 }

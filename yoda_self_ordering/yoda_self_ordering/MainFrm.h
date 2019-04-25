@@ -31,6 +31,9 @@ public:
 	virtual void Dump(CDumpContext& dc) const;
 #endif
 	HINSTANCE m_hLangDLL;
+	HINSTANCE m_hScanHookDll;
+	void RegisterScanHook();
+	void UnRegisterScanHook();
 protected:  // control bar embedded members
 // Generated message map functions
 protected:
@@ -41,6 +44,9 @@ protected:
 	afx_msg LRESULT OnCategroyView(WPARAM wp, LPARAM lp);
 	afx_msg LRESULT OnHomeView(WPARAM wp, LPARAM lp);
 	afx_msg	LRESULT ShowBalloonTip(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT OnPayView(WPARAM wp, LPARAM lp);
+	afx_msg LRESULT  OnScanMessage(WPARAM wParam, LPARAM lParam);
+	afx_msg LRESULT  OnCloseSon(WPARAM wParam, LPARAM lParam);
 	DECLARE_MESSAGE_MAP()
 
 public:

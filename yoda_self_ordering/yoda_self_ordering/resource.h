@@ -84,6 +84,27 @@
 #define IDB_PAY_SUCCESS                 260
 #define IDB_PAY                         261
 #define IDB_PNG10                       262
+#define IDR_GIF2                        263
+#define IDR_GIF_NETSDEBIT               263
+#define IDR_GIF_NETSFLASHPAY            264
+#define IDR_GIF4                        265
+#define IDR_GIF_NETSQRCODE              265
+#define IDB_CAPTION_PAY_BUTTON          266
+#define IDB_PNG11                       267
+#define IDB_VOUCHER                     268
+#define IDD_DIALOG_VOUCHER              269
+#define IDB_NETS_FLASHPAY_DISABLE       271
+#define IDB_NETS_QR_DISABLE             272
+#define IDB_PNG14                       273
+#define IDB_NETS_DISABLE                273
+#define IDD_DIALOG_VOUCHERS             274
+#define IDB_PNG12                       276
+#define IDB_VOUCHERICON                 276
+#define IDB_COUNTER_DISABLE             277
+#define IDB_IPAY_DISABLE                278
+#define IDB_FREE                        279
+#define IDB_PNG15                       280
+#define IDB_FREE_DISABLE                280
 #define IDC_BUTTON_HOME                 1054
 #define IDC_STATIC_TIP1                 1055
 #define IDC_STATIC_TIP2                 1056
@@ -103,6 +124,11 @@
 #define IDC_PROGRESS1                   1076
 #define IDC_PROGRESS                    1076
 #define IDC_STATIC_LOGO                 1077
+#define IDC_LIST_VOUCHER                1080
+#define IDC_BUTTON1                     1081
+#define IDC_BUTTON_OK                   1081
+#define IDC_CLOSE                       1081
+#define IDC_STATIC_TIP                  1083
 #define ID_VIEW_CUSTOMIZE               32770
 #define ID_VIEW_TOOLBARS                32771
 #define ID_BACK                         32775
@@ -125,9 +151,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        263
+#define _APS_NEXT_RESOURCE_VALUE        281
 #define _APS_NEXT_COMMAND_VALUE         32869
-#define _APS_NEXT_CONTROL_VALUE         1078
+#define _APS_NEXT_CONTROL_VALUE         1084
 #define _APS_NEXT_SYMED_VALUE           117
 #endif
 #endif
