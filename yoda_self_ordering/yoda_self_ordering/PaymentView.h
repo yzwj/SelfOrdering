@@ -47,6 +47,6 @@ public:
 	int							m_nPayTryTimes;
 	CSerialPort					m_NETS;
 	BOOL						m_bConnNETS;
-
+	int							m_InvicodeID;
 };
 #endif // !defined(AFX_PAYMENT_VIEW_H__5AACF30F_9829_40F8_82A6_1B90291E10BA__INCLUDED_)

@@ -3,9 +3,9 @@
 
 // CCashPop dialog
 
-class CCashPop : public CBCGPPopupDlg
+class CCashPop : public CDialog
 {
-	DECLARE_SERIAL(CCashPop)
+	DECLARE_DYNAMIC(CCashPop)
 public:
 	CCashPop();   // standard constructor
 
@@ -27,4 +27,5 @@ public:
 	afx_msg void OnClose();
 	afx_msg void OnTimer(UINT_PTR nIDEvent);
 	afx_msg void OnPaint();
+	virtual void PostNcDestroy();
 };

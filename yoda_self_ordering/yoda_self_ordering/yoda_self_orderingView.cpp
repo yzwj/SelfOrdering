@@ -290,7 +290,7 @@ BOOL Cyoda_self_orderingView::InitCfg()
 	glstTopping.RemoveAll();
 	glstSize.RemoveAll();
 	CString szSQL;
-	szSQL.Format(L"select * from y_Item where cat_no = 11");
+	szSQL.Format(L"select * from y_Item where cat_no = (select categroy_no from y_category where categroy_name = 'TOPPING')");
 	CAdoRecordSet recordset;
 	recordset.SetAdoConnection(gpDB);
 	recordset.SetCursorLocation();
@@ -332,7 +332,7 @@ BOOL Cyoda_self_orderingView::InitCfg()
 		recordset.MoveNext();
 	}
 	recordset.Close();
-	szSQL.Format(L"select * from y_Item where cat_no = 10");
+	szSQL.Format(L"select * from y_Item where cat_no = (select categroy_no from y_category where categroy_name = 'SIZE')");
 	recordset.SetAdoConnection(gpDB);
 	recordset.SetCursorLocation();
 	try

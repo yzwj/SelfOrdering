@@ -21,6 +21,7 @@ using namespace std;
 extern CList<LPORDERINFO, LPORDERINFO>	glstOrder;
 CList<LPTOPPINGINFO, LPTOPPINGINFO>		glstTopping;
 CList<LPSIZEINFO, LPSIZEINFO>		glstSize;
+extern CList<LPVOUCHERINFO> voucherlist;
 extern paymentModes payModes;
 extern  int gCurSerialNO;
 #ifdef _DEBUG
@@ -702,7 +703,7 @@ BOOL ExistOrder()
 	}
 	else return TRUE;
 }
-BOOL SaveOrder(ORDERSTATUS orderStatus)
+BOOL SaveOrder(ORDERSTATUS orderStatus,int nInvicodeID /*= -1*/)
 {
 	//CS-01TP1810040014
 	CString szOrderID,szID,szOutlet,szDate;
@@ -718,6 +719,8 @@ BOOL SaveOrder(ORDERSTATUS orderStatus)
 	CTime time = CTime::GetCurrentTime();
 	szDate.Format(L"%04d%02d%02d", time.GetYear(), time.GetMonth(), time.GetDay());
 	szOrderID.Format(L"SO|CS-%s%s%s%04d", szID,szOutlet, szDate.Right(6),gCurSerialNO);
+
+	
 	CString szSQL;
 	int nIndex = 1;
 	int nTotal = 0;
@@ -742,20 +745,33 @@ BOOL SaveOrder(ORDERSTATUS orderStatus)
 			//	szTopping = szTopping.Left(szTopping.GetLength() - 1);
 			}
 			szSQL.Format(_T("insert into y_order_list(OrderID,s_no,ItemIndex,ProductName,item_code,Size,Ice,SugarLevel,HoneyLevel,Topping,unit_price,\
-							disc_amt,payable,OrderDate,OrderTime,OrderStatus,PayTimes,KioskID,isDelivery,printer,payModes,total_no,outlet_id) \
+							disc_amt,payable,OrderDate,OrderTime,OrderStatus,PayTimes,KioskID,isDelivery,printer,payModes,total_no,outlet_id,invicode_id) \
 							VALUES('%s',%d,%d,'%s %s','%s','%s','%s','%s','%s','%s',%0.2lf,\
-							%0.2lf,%0.2lf,CURDATE(),CURTIME(),%d,0,'%s','%s','%s',%d,%d,%s)"),
+							%0.2lf,%0.2lf,CURDATE(),CURTIME(),%d,0,'%s','%s','%s',%d,%d,%s,'%s')"),
 				szOrderID, info->nProductCounts,nIndex, info->productInfo.szProductName,info->productInfo.szProductNameCN,
 				info->productInfo.szItemCode,info->productInfo.szSizeCode, info->productInfo.szICECode, info->productInfo.bShowSugarLevel ? info->productInfo.szSugarCode : L"", 
 				info->productInfo.bShowHoneyLevel ? info->productInfo.szHoneyCode : L"", szTopping,
-				info->productInfo.dbMoney*info->nProductCounts, info->productInfo.dbDiscount, info->productInfo.dbMoney*info->nProductCounts - info->productInfo.dbDiscount,
-				orderStatus,szOutlet+szID,"N", info->productInfo.szPrinter, payModes,nTotal,szOutletID);
+				info->productInfo.dbMoney, info->productInfo.dbDiscount, info->productInfo.dbMoney*info->nProductCounts - info->productInfo.dbDiscount,
+				orderStatus,szOutlet+szID,"N", info->productInfo.szPrinter, payModes,nTotal,szOutletID, info->szInvicodeCode);
 			if (gpDB->Execute(szSQL) == NULL)
 			{
-				AfxMessageBox(szSQL);
+				//AfxMessageBox(szSQL);
+				AddLog(gpDB, L"ERROR", szSQL, L"Save Order Failed");
 				return FALSE;
 			}
 			nIndex++;
+		}
+	}
+	if (nInvicodeID != -1 && !voucherlist.IsEmpty())
+	{
+		for (POSITION pos = voucherlist.GetHeadPosition(); pos != NULL;)
+		{
+			LPVOUCHERINFO voucher = voucherlist.GetNext(pos);
+			if (voucher->InvicodeID == nInvicodeID)
+			{
+				RedeemVoucher(voucher->szInvicode, szOrderID);
+				break;
+			}
 		}
 	}
 	return TRUE;
@@ -873,6 +889,17 @@ double GetSizePrice(CString szItemCode)
 		}
 	}
 	return 0.0;
+}
+double GetSizePrice(int nID)
+{
+	for (POSITION pos = glstSize.GetHeadPosition(); pos != NULL;)
+	{
+		LPSIZEINFO top = glstSize.GetNext(pos);
+		if (top != NULL && !top->nItemId == nID)
+		{
+			return top->ItemPrice;
+		}
+	}
 }
 int GetSizeID(CString szItemCode)
 {
@@ -1038,7 +1065,7 @@ bool printTicket(CString szPrinter)
 
 CList<LPVOUCHERINFO> voucherlist;
 
-int GetVoucherID(CString szCode)
+int GetVoucherID(CString szCode,int& nInvicode)
 {
 	std::string strResponse;
 	CString szMsg;
@@ -1057,6 +1084,7 @@ int GetVoucherID(CString szCode)
 			if (!szStatus.CompareNoCase(_T("valid")))
 			{
 				szID = root["voucher_id"].asInt();
+				nInvicode = root["invicode_id"].asInt();
 				return szID;
 			}
 		}
@@ -1065,7 +1093,8 @@ int GetVoucherID(CString szCode)
 }
 int GetVoucherInfo(CString szCode)
 {
-	int nID =  GetVoucherID(szCode);
+	int nInivicode;
+	int nID =  GetVoucherID(szCode, nInivicode);
 	if (nID == -1)
 		return -1;
 	CString szID;
@@ -1074,8 +1103,7 @@ int GetVoucherInfo(CString szCode)
 	 "outlet_limit": [],
 	"status": "valid",
 	"user": "root",
-	"outlet": "",
-	"voucher": "1 Free M Size Drink(TCC Student Welfare Pack Giveaway II)",
+	"outlet": "",`		"voucher": "1 Free M Size Drink(TCC Student Welfare Pack Giveaway II)",
 	"voucher_id": 56
 	*/
 	if (voucherlist.GetCount() > 0)
@@ -1099,6 +1127,7 @@ int GetVoucherInfo(CString szCode)
 		{
 			LPVOUCHERINFO voucher = new VOUCHERINFO();
 			voucher->VoucherID = root["id"].asInt();
+			voucher->InvicodeID = nInivicode;
 			voucher->szName = root["name"].asCString();
 			voucher->type = (voucherType)root["type"].asInt();
 			voucher->szDescription = root["description"].asCString();
@@ -1156,6 +1185,22 @@ int GetVoucherInfo(CString szCode)
 	return 1;
 }
 
+BOOL RedeemVoucher(CString szInvicode,CString OrderID)
+{
+	int OutletID = -1;
+	OutletID = ::GetPrivateProfileInt(L"Outlet", L"ID", OutletID, gIniFile);
+	std::string strResponse;
+	CString szRequest, szMsg;
+	szRequest.Format(_T("?code=%s&redeem_outlet=%d"), szInvicode, OutletID);
+	CHttpClient http;
+	int bResult = http.HttpPost(_T("https://crm.itea.sg/api/v1/invicode/redeem/") + szRequest, _T(""), strResponse,TOKEN);
+	if (bResult)
+	{
+		AddLog(gpDB, L"Redeem Voucher ERROR", szInvicode, OrderID);
+		return FALSE;
+	}
+	return TRUE;
+}
 BOOL VoucherEnable(LPVOUCHERINFO voucher)
 {
 	//status
@@ -1225,7 +1270,7 @@ BOOL VoucherEnable(LPVOUCHERINFO voucher)
 				LPORDERINFO order = glstOrder.GetNext(pos);
 				for (int i = 0; i < voucher->limitRedeemCategroy.size(); i++)
 				{
-					if (order->productInfo.nCategroyID == voucher->limitRedeemCategroy[i] && voucher->nProductSize >= GetSizeID(order->productInfo.szSizeCode))
+					if (order->productInfo.nCategroyID == voucher->limitRedeemCategroy[i])
 					{
 						return true;
 					}
@@ -1282,7 +1327,7 @@ BOOL VoucherEnable(LPVOUCHERINFO voucher)
 				LPORDERINFO order = glstOrder.GetNext(pos);
 				for (int i = 0; i < voucher->limitRedeemProduct.size(); i++)
 				{
-					if (order->productInfo.nProductID == voucher->limitRedeemProduct[i] && voucher->nProductSize >= GetSizeID(order->productInfo.szSizeCode))
+					if (order->productInfo.nProductID == voucher->limitRedeemProduct[i])
 					{
 						return true;
 					}
@@ -1300,14 +1345,18 @@ BOOL VoucherEnable(LPVOUCHERINFO voucher)
 	return false;
 }
 
-double RedeemVoucherIncomePrice(int nVoucherID,double Amount)
+double RedeemVoucherIncomePrice(int nInvicodeID,double Amount)
 {
+	CString szInviCode;
 	LPVOUCHERINFO voucher;
 	for (POSITION pos=voucherlist.GetHeadPosition();pos!=NULL;)
 	{
 		voucher = voucherlist.GetNext(pos);
-		if (voucher->VoucherID == nVoucherID)
+		if (voucher->InvicodeID == nInvicodeID)
+		{
+			szInviCode = voucher->szInvicode;
 			break;
+		}
 	}
 	//type
 	switch (voucher->type)
@@ -1319,7 +1368,9 @@ double RedeemVoucherIncomePrice(int nVoucherID,double Amount)
 			LPORDERINFO order = glstOrder.GetNext(pos);
 			if (GetSizeID(order->productInfo.szSizeCode) == voucher->nProductSize)
 			{
-				return GetSizePrice(order->productInfo.szSizeCode);
+				order->productInfo.dbDiscount = GetSizePrice(order->productInfo.szSizeCode);
+				order->szInvicodeCode = szInviCode;
+				return order->productInfo.dbDiscount;
 			}
 		}
 	}
@@ -1337,6 +1388,8 @@ double RedeemVoucherIncomePrice(int nVoucherID,double Amount)
 					if (GetToppingID(order->productInfo.ToppingArr[j]) == voucher->limitRedeemCategroy[i])
 					{
 						dbPrice += GetToppingPrice(order->productInfo.ToppingArr[j]);
+						order->productInfo.dbDiscount = dbPrice;
+						order->szInvicodeCode = szInviCode;
 					}
 				}
 			}
@@ -1359,11 +1412,22 @@ double RedeemVoucherIncomePrice(int nVoucherID,double Amount)
 				LPORDERINFO order = glstOrder.GetNext(pos);
 				for (int i = 0; i < voucher->limitRedeemCategroy.size(); i++)
 				{
-					if (order->productInfo.nCategroyID == voucher->limitRedeemCategroy[i] && voucher->nProductSize >= GetSizeID(order->productInfo.szSizeCode))
+					if (order->productInfo.nCategroyID == voucher->limitRedeemCategroy[i])
 					{
+						if (voucher->nProductSize >= GetSizeID(order->productInfo.szSizeCode))
+						{
+							order->productInfo.dbDiscount = voucher->discount_price = order->productInfo.dbUnitMenoy + GetSizePrice(order->productInfo.szSizeCode);
+							order->szInvicodeCode = szInviCode;
+							return voucher->discount_price;
+						}
+						else
+						{
+							order->productInfo.dbDiscount = voucher->discount_price = order->productInfo.dbUnitMenoy + GetSizePrice(order->productInfo.szSizeCode)-GetSizePrice(voucher->nProductSize);
+							order->szInvicodeCode = szInviCode;
+							return voucher->discount_price;
+						}
 						//TODO 判断价格最高的或价格最低的返回
-						voucher->discount_price = order->productInfo.dbUnitMenoy + GetSizePrice(order->productInfo.szSizeCode);
-						return voucher->discount_price;
+						
 					}
 				}
 			}
@@ -1378,9 +1442,20 @@ double RedeemVoucherIncomePrice(int nVoucherID,double Amount)
 				{
 					if (order->productInfo.nProductID == voucher->limitRedeemProduct[i] && voucher->nProductSize >= GetSizeID(order->productInfo.szSizeCode))
 					{
-						voucher->discount_price = order->productInfo.dbUnitMenoy + GetSizePrice(order->productInfo.szSizeCode);
-						return voucher->discount_price;
+						if (voucher->nProductSize >= GetSizeID(order->productInfo.szSizeCode))
+						{
+							order->productInfo.dbDiscount = voucher->discount_price = order->productInfo.dbUnitMenoy + GetSizePrice(order->productInfo.szSizeCode);
+							order->szInvicodeCode = szInviCode;
+							return voucher->discount_price;
+						}
+						else
+						{
+							order->productInfo.dbDiscount = voucher->discount_price = order->productInfo.dbUnitMenoy + GetSizePrice(order->productInfo.szSizeCode) - GetSizePrice(voucher->nProductSize);
+							order->szInvicodeCode = szInviCode;
+							return voucher->discount_price;
+						}
 					}
+					
 				}
 			}
 		}

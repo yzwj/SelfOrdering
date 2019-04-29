@@ -145,3 +145,11 @@ void CPaymentStatusDlg::OnClose()
 
 	CDialog::OnClose();
 }
+
+
+void CPaymentStatusDlg::PostNcDestroy()
+{
+	// TODO: Add your specialized code here and/or call the base class
+	CDialog::PostNcDestroy();
+	delete this;
+}

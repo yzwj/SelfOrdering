@@ -97,8 +97,9 @@ DWORD WINAPI SettlementThread(LPVOID lpParam)
 		}
 		else
 		{
-			USES_CONVERSION;
-			pThis->GetDlgItem(IDC_STATIC_DESC)->SetWindowText(A2W(pThis->m_Port.m_ResponseMsg));
+			CString szMsg;
+			szMsg = pThis->m_Port.m_ResponseMsg;
+			pThis->GetDlgItem(IDC_STATIC_DESC)->SetWindowText(szMsg);
 		}
 	}
 	else
@@ -187,27 +188,5 @@ void CNETSOperation::OnClose()
 void CNETSOperation::OnBnClickedClose()
 {
 	// TODO: Add your control notification handler code here
-	//::PostMessage(AfxGetMainWnd()->m_hWnd, WM_CLOSE_SON,NULL, NULL);
-	
-	int nPort = ::GetPrivateProfileInt(L"NETS", L"Port", 0, gIniFile);
-	if (m_Port.InitPort(nPort))
-	{
-		CString ECN;
-		USES_CONVERSION;
-		strcpy(m_Port.m_lastApprovedECN, "190423002300");
-		strcpy(m_Port.m_lastApprovedFun, "56");
-		int result = m_Port.GetLastApproved("190423002300");
-		GetDlgItem(IDC_STATIC_DESC)->SetWindowText(L"");
-		if (result == TRANSACTION_COMPLATED_STATUS)
-		{
-			CString szText;
-			szText = m_Port.m_lastApprovedECN;
-			GetDlgItem(IDC_STATIC_DESC)->SetWindowText(szText);
-		}
-		else
-		{
-			GetDlgItem(IDC_STATIC_DESC)->SetWindowText(L"Transaction error.");
-		}
-	}
-	m_Port.ClosePort();
+	::PostMessage(AfxGetMainWnd()->m_hWnd, WM_CLOSE_SON,NULL, NULL);
 }

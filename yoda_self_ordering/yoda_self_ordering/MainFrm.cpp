@@ -12,6 +12,7 @@ CTipInfo* CTipInfo::c_pTip;
 UINT	gCurViewID;
 extern PRODUCTINFO gCurProduct;
 extern 	CList<LPORDERINFO, LPORDERINFO>	glstOrder;
+extern CList<LPVOUCHERINFO> voucherlist;
 UINT WM_SCAN_MESSAGE;
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -288,7 +289,11 @@ LRESULT CMainFrame::OnHomeView(WPARAM wp, LPARAM lp)
 {
 	Cyoda_self_orderingView * pView = (Cyoda_self_orderingView*)GetActiveView();
 	if (glstOrder.GetSize() > 0)
+	{
 		glstOrder.RemoveAll();
+		voucherlist.RemoveAll();
+	}
+		
 	pView->ShowView(ID_VIEW_HOME);
 	return LRESULT();
 }
@@ -325,8 +330,8 @@ void CMainFrame::OnTimer(UINT_PTR nIDEvent)
 				Cyoda_self_orderingView * pView = (Cyoda_self_orderingView*)GetActiveView();
 				pView->ShowView(ID_VIEW_HOME);
 				glstOrder.RemoveAll();
+				voucherlist.RemoveAll();
 			}
-			
 		}
 	}
 	/*if (nIDEvent == 1002)

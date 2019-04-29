@@ -152,12 +152,14 @@ typedef struct HeaderOrderInfo
 		//productInfo = NULL;
 		nOrderID = 0;
 		nProductCounts = 1;
+		szInvicodeCode = _T("");
 		bEdit = FALSE;
 	}
 	int				nOrderID;
 	PRODUCTINFO     productInfo;
 	int             nProductCounts;
 	BOOL			bEdit;
+	CString			szInvicodeCode;
 }ORDERINFO, *LPORDERINFO;
 enum ORDERSTATUS {
 	ORDER_INIT      = 0,
@@ -189,6 +191,7 @@ enum voucherType {
 };
 typedef struct voucher_info {
 	int VoucherID;
+	int InvicodeID;
 	CString szName;
 	CString szDescription;
 	CString szInvicode;
@@ -236,11 +239,12 @@ int	IsHaveSameID(CAdoConnection *pDB, CString sColName, CString sTableName, CStr
 bool execSQL(CAdoConnection *pDB, CString &szSQL);
 BOOL GenerateQRCode(CString szText);
 BOOL ImageFromIDResource(UINT nID, LPCTSTR sTR, Image *&pImg);
-BOOL SaveOrder(ORDERSTATUS orderStatus);
+BOOL SaveOrder(ORDERSTATUS orderStatus, int nInvicodeID = -1);
 int GetCurOrderPayTimes();
 BOOL UpdateOrderStatus(ORDERSTATUS orderStatus);
 double GetToppingPrice(CString szItemCode);
 double GetSizePrice(CString szItemCode);
+double GetSizePrice(int nID);
 CString GetToppingName(CString szItemCode);
 int GetOrderCounts();
 bool printTicket(CString szPrinter);
@@ -248,4 +252,5 @@ int GetVoucherInfo(CString szCode);
 int GetSizeID(CString szItemCode);
 int GetToppingID(CString szItemCode);
 BOOL VoucherEnable(LPVOUCHERINFO voucher);
-double RedeemVoucherIncomePrice(int nVoucherID, double Amount);
+double RedeemVoucherIncomePrice(int invicodeID, double Amount);
+BOOL RedeemVoucher(CString szInvicode, CString OrderID);

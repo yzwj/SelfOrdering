@@ -164,3 +164,11 @@ void CNETSGuideGif::OnTimer(UINT_PTR nIDEvent)
 	}
 	CDialogEx::OnTimer(nIDEvent);
 }
+
+
+void CNETSGuideGif::PostNcDestroy()
+{
+	// TODO: Add your specialized code here and/or call the base class
+	CDialogEx::PostNcDestroy();
+	delete this;
+}

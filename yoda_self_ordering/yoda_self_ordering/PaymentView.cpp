@@ -69,6 +69,7 @@ CPayContainerCtrl::CPayContainerCtrl()
 	m_bConnNETS = FALSE;
 	m_dbDiscount = .0;
 	m_dbPayable = .0;
+	m_InvicodeID = -1;
 }
 CPayContainerCtrl::~CPayContainerCtrl()
 {
@@ -275,6 +276,13 @@ void CPayContainerCtrl::SetTextEnable(UINT nID, BOOL bEnable)
 	ASSERT_VALID(pText);
 	pText->SetVisible(bEnable);
 }
+DWORD WINAPI VOUCHER_THREAD(LPVOID lpParam)
+{
+	CPayContainerCtrl * pThis = (CPayContainerCtrl*)lpParam;
+	CVoucherList dlg(pThis);
+	dlg.DoModal();
+	return 1;
+}
 DWORD WINAPI DRAW_GIF(LPVOID lpParam)
 {
 	CPayContainerCtrl * pThis = (CPayContainerCtrl*)lpParam;
@@ -338,7 +346,7 @@ DWORD WINAPI ThreadNETSDebit(LPVOID lpParam)
 			log.CloseLog();
 			//success
 			gTransStatus = TRANS_END;
-			if (!SaveOrder(ORDER_PAID))
+			if (!SaveOrder(ORDER_PAID, pThis->m_InvicodeID))
 			{
 				CString szTip, szError;
 				szTip.LoadStringW(IDS_SAVE_ORDER_ERROR);
@@ -384,7 +392,7 @@ DWORD WINAPI ThreadNETSDebit(LPVOID lpParam)
 						//success
 					//	pThis->m_flash->DestroyDisplayWindow();
 						gTransStatus = TRANS_END;
-						if (!SaveOrder(ORDER_PAID))
+						if (!SaveOrder(ORDER_PAID, pThis->m_InvicodeID))
 						{
 							CString szTip, szError;
 							szTip.LoadStringW(IDS_SAVE_ORDER_ERROR);
@@ -458,7 +466,7 @@ DWORD WINAPI ThreadNETSFlashPay(LPVOID lpParam)
 			log.CloseLog();
 			gTransStatus = TRANS_END;
 			//success
-			if (!SaveOrder(ORDER_PAID))
+			if (!SaveOrder(ORDER_PAID, pThis->m_InvicodeID))
 			{
 				CString szTip, szError;
 				szTip.LoadStringW(IDS_SAVE_ORDER_ERROR);
@@ -506,7 +514,7 @@ DWORD WINAPI ThreadNETSFlashPay(LPVOID lpParam)
 						gTransStatus = TRANS_END;
 						//success
 						//	pThis->m_flash->DestroyDisplayWindow();
-						if (!SaveOrder(ORDER_PAID))
+						if (!SaveOrder(ORDER_PAID, pThis->m_InvicodeID))
 						{
 							CString szTip, szError;
 							szTip.LoadStringW(IDS_SAVE_ORDER_ERROR);
@@ -579,7 +587,7 @@ DWORD WINAPI ThreadNETSQRCode(LPVOID lpParam)
 			log.CloseLog();
 			//success
 			gTransStatus = TRANS_END;
-			if (!SaveOrder(ORDER_PAID))
+			if (!SaveOrder(ORDER_PAID, pThis->m_InvicodeID))
 			{
 				CString szTip, szError;
 				szTip.LoadStringW(IDS_SAVE_ORDER_ERROR);
@@ -626,7 +634,7 @@ DWORD WINAPI ThreadNETSQRCode(LPVOID lpParam)
 						gTransStatus = TRANS_END;
 						//success
 						//	pThis->m_flash->DestroyDisplayWindow();
-						if (!SaveOrder(ORDER_PAID))
+						if (!SaveOrder(ORDER_PAID, pThis->m_InvicodeID))
 						{
 							CString szTip, szError;
 							szTip.LoadStringW(IDS_SAVE_ORDER_ERROR);
@@ -677,9 +685,7 @@ BOOL CPayContainerCtrl::OnMouseDown(int nButton, const CBCGPPoint& pt)
 		CBCGPImageGaugeImpl* pImage = DYNAMIC_DOWNCAST(CBCGPImageGaugeImpl, pObject);
 		if (pImage != NULL && pImage->GetID() == ID_IMAGE_VOUCHER)
 		{
-			CVoucherList *pTD = new CVoucherList(this);
-			pTD->Create(IDD_DIALOG_VOUCHERS);
-			pTD->ShowWindow(SW_SHOWNORMAL);
+			CreateThread(NULL, 0, VOUCHER_THREAD, this, 0, NULL);
 		}
 		if (pImage != NULL && m_dbPayable >0.0 && pImage->GetID() == ID_IMAGE_IPAY)
 		{
@@ -742,7 +748,11 @@ BOOL CPayContainerCtrl::OnMouseDown(int nButton, const CBCGPPoint& pt)
 			if (SaveOrder(ORDER_COUNTER))
 			{
 				CreateThread(NULL, 0, RECEIPT_THREAD, this, 0, NULL);
-				CBCGPPopupWindow* pPopup = new CBCGPPopupWindow;
+				CCashPop *pCash = new CCashPop();
+				pCash->Create(IDD_CASH_POP, this);
+				pCash->ShowWindow(SW_SHOWNORMAL);
+				pCash->CenterWindow();
+				/*CBCGPPopupWindow* pPopup = new CBCGPPopupWindow;
 				CBCGPPopupWindowColors customColors;
 				customColors.clrFill = RGB(103, 109, 134);
 				customColors.clrText = RGB(255, 255, 255);
@@ -765,16 +775,20 @@ BOOL CPayContainerCtrl::OnMouseDown(int nButton, const CBCGPPoint& pt)
 				pPopup->EnableCloseButton(FALSE);
 				pPopup->Create(this, IDD_CASH_POP,
 					NULL, ptLocation, RUNTIME_CLASS(CCashPop));
-				pPopup->CenterWindow();
+				pPopup->CenterWindow();*/
 			}
-			
 		}
 		else if (m_dbPayable <= 0.0 && pImage != NULL && pImage->GetID() == ID_IMAGE_FREE)
 		{
-			CPaymentStatusDlg *pTD = new CPaymentStatusDlg(TRUE);
-			pTD->Create(IDD_PAYMENT_STATUS);
-			pTD->ShowWindow(SW_SHOWNORMAL);
-			CreateThread(NULL, 0, RECEIPT_THREAD, this, 0, NULL);
+			if (SaveOrder(ORDER_COUNTER,m_InvicodeID))
+			{
+				CPaymentStatusDlg *pTD = new CPaymentStatusDlg(TRUE);
+				pTD->Create(IDD_PAYMENT_STATUS);
+				pTD->ShowWindow(SW_SHOWNORMAL);
+				CreateThread(NULL, 0, RECEIPT_THREAD, this, 0, NULL);
+			}
+			
+
 		}
 	}
 	return FALSE;
@@ -808,8 +822,8 @@ void CPayContainerCtrl::OnDraw(CBCGPGraphicsManager * pGM, const CBCGPRect & rec
 
 LRESULT CPayContainerCtrl::OnVoucherRedeem(WPARAM wParam, LPARAM lpParam)
 {
-	int nVoucherID = lpParam;
-	m_dbDiscount = RedeemVoucherIncomePrice(nVoucherID, m_dbTotal);
+	m_InvicodeID = lpParam;
+	m_dbDiscount = RedeemVoucherIncomePrice(m_InvicodeID, m_dbTotal);
 	CString szDiscount,szPayable;
 	szDiscount.Format(L"-$%0.2lf", m_dbDiscount);
 	m_dbPayable = m_dbTotal - m_dbDiscount;

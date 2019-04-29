@@ -8,7 +8,7 @@
 
 // CCashPop dialog
 
-IMPLEMENT_SERIAL(CCashPop, CBCGPPopupDlg, 1)
+IMPLEMENT_DYNAMIC(CCashPop, CDialog)
 
 CCashPop::CCashPop()
 {
@@ -17,7 +17,7 @@ CCashPop::CCashPop()
 
 void CCashPop::DoDataExchange(CDataExchange* pDX)
 {
-	CBCGPPopupDlg::DoDataExchange(pDX);
+	CDialog::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_STATIC_TIP1, m_wndTip1);
 	DDX_Control(pDX, IDC_STATIC_TIP2, m_wndTip2);
 	DDX_Control(pDX, IDC_STATIC_TIP3, m_wndTip3);
@@ -25,7 +25,7 @@ void CCashPop::DoDataExchange(CDataExchange* pDX)
 }
 
 
-BEGIN_MESSAGE_MAP(CCashPop, CBCGPPopupDlg)
+BEGIN_MESSAGE_MAP(CCashPop, CDialog)
 	ON_BN_CLICKED(IDC_BUTTON_HOME, &CCashPop::OnBnClickedButtonHome)
 	ON_WM_CLOSE()
 	ON_WM_TIMER()
@@ -38,7 +38,7 @@ END_MESSAGE_MAP()
 
 BOOL CCashPop::OnInitDialog()
 {
-	CBCGPPopupDlg::OnInitDialog();
+	CDialog::OnInitDialog();
 	// TODO:  Add extra initialization here
 	SetMenu(NULL);
 	LOGFONT lf;
@@ -58,14 +58,14 @@ void CCashPop::OnBnClickedButtonHome()
 {
 	// TODO: Add your control notification handler code here
 	KillTimer(1000);
-	SendMessage(WM_CLOSE);
 	::PostMessage(AfxGetMainWnd()->m_hWnd, WM_HOME_VIEW, 0, 0);
+	SendMessage(WM_CLOSE);
 }
 
 void CCashPop::OnClose()
 {
 	// TODO: Add your message handler code here and/or call default
-	CBCGPPopupDlg::OnClose();
+	CDialog::OnClose();
 }
 
 
@@ -73,7 +73,7 @@ void CCashPop::OnTimer(UINT_PTR nIDEvent)
 {
 	// TODO: Add your message handler code here and/or call default	
 	OnBnClickedButtonHome();
-	CBCGPPopupDlg::OnTimer(nIDEvent);
+	CDialog::OnTimer(nIDEvent);
 }
 
 
@@ -89,4 +89,13 @@ void CCashPop::OnPaint()
 	Image *pimage; // Construct an image
 	ImageFromIDResource(IDB_PAY_SUCCESS, _T("PNG"), pimage);
 	graphics.DrawImage(pimage, rc.left, rc.top, rc.Width(), rc.Height());
+}
+
+
+void CCashPop::PostNcDestroy()
+{
+	// TODO: Add your specialized code here and/or call the base class
+
+	CDialog::PostNcDestroy();
+	delete this;
 }

@@ -395,9 +395,6 @@ UINT WINAPI CSerialPort::ListenThread(void* pParam)
 		{
 			if (pSerialPort->m_bRecvFlag == INIT_STATUS && (GetTickCount() - pSerialPort->dwCountTimer) > 2000 && !pSerialPort->m_bReceived)
 			{
-				//NETSLog log;
-				//log.WriteStringToLog("No response");
-				//log.CloseLog();
 				pSerialPort->m_bRecvFlag = NO_RESPONSE_STATUS;
 			}
 			Sleep(SLEEP_TIME_INTERVAL);
@@ -408,27 +405,21 @@ UINT WINAPI CSerialPort::ListenThread(void* pParam)
 		/** 读取输入缓冲区中的数据并输出显示 */
 		if (pSerialPort->ReadChar(pSerialPort->m_recvData,BytesInQue) == true)
 		{
-			if (BytesInQue == 1)
+			if (BytesInQue == 1 && nCounts == 0)
 			{
 				if (*pSerialPort->m_recvData== 0x06)
 				{
 					pSerialPort->m_bRecvFlag = ACK_STATUS;
-					NETSLog log;
-					log.WriteStringToLog("recv:ACK");
-					log.CloseLog();
 					nCounts = 0;
 				}
 				else if (*pSerialPort->m_recvData == 0x015)
 				{
 					pSerialPort->m_bRecvFlag = NACK_STATUS;
-					NETSLog log;
-					log.WriteStringToLog("recv:NACK");
-					log.CloseLog();
 					nCounts = 0;
 				}
 				continue;
 			}
-			else if (BytesInQue > 1 && pSerialPort->m_recvData[0] == 0x06 )
+			else if (BytesInQue > 1 && pSerialPort->m_recvData[0] == 0x06 && nCounts == 0)
 			{
 				pSerialPort->m_bRecvFlag = ACK_STATUS;
 				memcpy(data, pSerialPort->m_recvData+1, BytesInQue-1);
@@ -475,16 +466,16 @@ UINT WINAPI CSerialPort::ListenThread(void* pParam)
 					char ack = 0x06;
 					pSerialPort->WriteData(&ack, 1);
 					NETSLog log;
+					log.WriteHexToLog((char*)data, nRecvCounts + 5);
 					log.WriteStringToLog("Correct LRC/send ACK");
 					log.CloseLog();
 				}
 				else
 				{
 					NETSLog log;
-					log.WriteStringToLog("wrong LRC");
+					log.WriteHexToLog((char*)data, nRecvCounts + 5);
 					log.CloseLog();
-					char NACK = 0x15;
-					pSerialPort->WriteData(&NACK, 1);
+					pSerialPort->m_bRecvFlag = RESULT_WRONG_LRC;
 					continue;
 				}
 				
@@ -998,16 +989,80 @@ RECV_STATUS CSerialPort::LogonNETS(char * ECN)
 	if (!WriteData(data, length + 1))
 		return TRANSACTION_ERROR_STATUS;
 	int looptimes = 0;
-	int retrytimes = 2;
+	int retrytimes = 1;
 	while (1)
 	{
-		if ( m_bRecvFlag == NACK_STATUS && retrytimes > 0)
+		if (m_bRecvFlag == NACK_STATUS || m_bRecvFlag == NO_RESPONSE_STATUS)
+		{
+			if (retrytimes >= 3)
+			{
+				strcpy(m_ResponseMsg, "Terminal no response");
+				return TRANSACTION_ERROR_STATUS;
+			}
+			NETSLog log;
+			log.WriteStringToLog("recv:NACK/no response");
+			log.WriteStringToLog("Data resent:NETSDebit");
+			log.WriteHexToLog(data, length + 1);
+			log.CloseLog();
+			dwCountTimer = GetTickCount();
+			m_bRecvFlag = INIT_STATUS;
+			if (!WriteData(data, length + 1))
+				return TRANSACTION_ERROR_STATUS;
+			retrytimes++;
+		}
+		else if (m_bRecvFlag == ACK_STATUS)
+		{
+			NETSLog log;
+			log.WriteStringToLog("recv:ACK");
+			log.CloseLog();
+			retrytimes = 0;
+			m_bRecvFlag = PROCESS_STATUS;
+		}
+		else if (m_bRecvFlag == PROCESS_STATUS)
+		{
+			Sleep(500);
+			looptimes++;
+			if (looptimes >= 60)
+			{
+				strcpy(m_ResponseMsg, "Time out");
+				return TIME_OUT_STATUS;
+			}
+				
+			//if (retrytimes >= 3)
+			//	return TRANSACTION_ERROR_STATUS;
+		}
+		else if (m_bRecvFlag == RESULT_WRONG_LRC)
+		{
+			if (retrytimes < 3)
+			{
+				m_bRecvFlag = PROCESS_STATUS;
+				NETSLog log;
+				log.WriteStringToLog("recv wrong LRC");
+				log.WriteStringToLog("send NACK");
+				log.CloseLog();
+				char NACK = 0x15;
+				WriteData(&NACK, 1);
+				retrytimes++;
+			}
+			if (retrytimes >= 3)
+			{
+				NETSLog log;
+				log.WriteStringToLog("3 times wrong LRC");
+				log.CloseLog();
+				return TRANSACTION_ERROR_STATUS;
+			}
+		}
+		else if (m_bRecvFlag == TRANSACTION_ERROR_STATUS || m_bRecvFlag == TRANSACTION_COMPLATED_STATUS)
+			return m_bRecvFlag;
+		
+		/*if ( m_bRecvFlag == NACK_STATUS && retrytimes > 0)
 		{
 			NETSLog log;
 			log.WriteStringToLog("Data resent:Logon");
 			log.WriteHexToLog(data, length + 1);
 			log.CloseLog();
 			dwCountTimer = GetTickCount();
+			m_bRecvFlag = INIT_STATUS;
 			if (!WriteData(data, length + 1))
 				return TRANSACTION_ERROR_STATUS;
 			retrytimes--;
@@ -1020,6 +1075,7 @@ RECV_STATUS CSerialPort::LogonNETS(char * ECN)
 			log.WriteHexToLog(data, length + 1);
 			log.CloseLog();
 			dwCountTimer = GetTickCount();
+			m_bRecvFlag = INIT_STATUS;
 			if (!WriteData(data, length + 1))
 				return TRANSACTION_ERROR_STATUS;
 			retrytimes--;
@@ -1028,7 +1084,7 @@ RECV_STATUS CSerialPort::LogonNETS(char * ECN)
 		{
 			Sleep(1000);
 			looptimes++;
-			if (looptimes >= 60)
+			if (looptimes >= 30)
 				return TIME_OUT_STATUS;
 		}
 		else if (retrytimes == 0 && m_bRecvFlag == INIT_STATUS)
@@ -1040,7 +1096,7 @@ RECV_STATUS CSerialPort::LogonNETS(char * ECN)
 			log.CloseLog();
 			return NO_RESPONSE_STATUS;
 		}
-		else return m_bRecvFlag;
+		else return m_bRecvFlag;*/
 	}
 	return m_bRecvFlag;
 }
@@ -1060,16 +1116,84 @@ RECV_STATUS CSerialPort::SettlementNETS(char * ECN)
 	if (!WriteData(data, length + 1))
 		return TRANSACTION_ERROR_STATUS;
 	int looptimes = 0;
-	int retrytimes = 2;
+	int retrytimes = 1;
 	while (1)
 	{
-		if (m_bRecvFlag == NACK_STATUS && retrytimes > 0)
+		if (m_bRecvFlag == NACK_STATUS || m_bRecvFlag == NO_RESPONSE_STATUS)
+		{
+			if (retrytimes >= 3)
+			{
+				strcpy(m_ResponseMsg, "Terminal no response");
+				m_bRecvFlag = TRANSACTION_ERROR_STATUS;
+				return TRANSACTION_ERROR_STATUS;
+			}
+			NETSLog log;
+			log.WriteStringToLog("recv:NACK/no response");
+			log.WriteStringToLog("Data resent:Settlement");
+			log.WriteHexToLog(data, length + 1);
+			log.CloseLog();
+			dwCountTimer = GetTickCount();
+			m_bRecvFlag = INIT_STATUS;
+			if (!WriteData(data, length + 1))
+			{
+				m_bRecvFlag = TRANSACTION_ERROR_STATUS;
+				return TRANSACTION_ERROR_STATUS;
+			}
+				
+			retrytimes++;
+		}
+		else if (m_bRecvFlag == ACK_STATUS)
+		{
+			NETSLog log;
+			log.WriteStringToLog("recv:ACK");
+			log.CloseLog();
+			retrytimes = 0;
+			m_bRecvFlag = PROCESS_STATUS;
+		}
+		else if (m_bRecvFlag == PROCESS_STATUS)
+		{
+			Sleep(500);
+			looptimes++;
+			if (looptimes >= 60)
+			{
+				strcpy(m_ResponseMsg, "Time out");
+				return TIME_OUT_STATUS;
+			}
+				
+			//if (retrytimes >= 3)
+			//	return TRANSACTION_ERROR_STATUS;
+		}
+		else if (m_bRecvFlag == RESULT_WRONG_LRC)
+		{
+			if (retrytimes < 3)
+			{
+				m_bRecvFlag = PROCESS_STATUS;
+				NETSLog log;
+				log.WriteStringToLog("recv wrong LRC");
+				log.WriteStringToLog("send NACK");
+				log.CloseLog();
+				char NACK = 0x15;
+				WriteData(&NACK, 1);
+				retrytimes++;
+			}
+			if (retrytimes >= 3)
+			{
+				NETSLog log;
+				log.WriteStringToLog("3 times wrong LRC");
+				log.CloseLog();
+				return TIME_OUT_STATUS;
+			}
+		}
+		else if (m_bRecvFlag == TRANSACTION_ERROR_STATUS || m_bRecvFlag == TRANSACTION_COMPLATED_STATUS)
+			return m_bRecvFlag;
+		/*if (m_bRecvFlag == NACK_STATUS && retrytimes > 0)
 		{
 			NETSLog log;
 			log.WriteStringToLog("Data resent:settlement");
 			log.WriteHexToLog(data, length + 1);
 			log.CloseLog();
 			dwCountTimer = GetTickCount();
+			m_bRecvFlag = INIT_STATUS;
 			if (!WriteData(data, length + 1))
 				return TRANSACTION_ERROR_STATUS;
 			retrytimes--;
@@ -1082,6 +1206,7 @@ RECV_STATUS CSerialPort::SettlementNETS(char * ECN)
 			log.WriteHexToLog(data, length + 1);
 			log.CloseLog();
 			dwCountTimer = GetTickCount();
+			m_bRecvFlag = INIT_STATUS;
 			if (!WriteData(data, length + 1))
 				return TRANSACTION_ERROR_STATUS;
 			retrytimes--;
@@ -1090,7 +1215,7 @@ RECV_STATUS CSerialPort::SettlementNETS(char * ECN)
 		{
 			Sleep(1000);
 			looptimes++;
-			if (looptimes >= 60)
+			if (looptimes >= 30)
 				return TIME_OUT_STATUS;
 		}
 		else if (retrytimes == 0 && m_bRecvFlag == INIT_STATUS)
@@ -1102,7 +1227,7 @@ RECV_STATUS CSerialPort::SettlementNETS(char * ECN)
 			log.CloseLog();
 			return NO_RESPONSE_STATUS;
 		}
-		else return m_bRecvFlag;
+		else return m_bRecvFlag;*/
 	}
 	return m_bRecvFlag;
 }
@@ -1159,16 +1284,87 @@ RECV_STATUS CSerialPort::TransactionNETSDebit(char* ECN, float Amounts)
 	if(!WriteData(data, length + 1))
 		return TRANSACTION_ERROR_STATUS;
 	int looptimes = 0;
-	int retrytimes = 2;
+	int retrytimes = 1;
 	while (1)
 	{
-		if (m_bRecvFlag == NACK_STATUS && retrytimes > 0)
+		if (m_bRecvFlag == NACK_STATUS || m_bRecvFlag == NO_RESPONSE_STATUS)
+		{
+			
+			if (retrytimes >= 3)
+			{
+				strcpy(m_ResponseMsg, "Terminal no response");
+				m_bRecvFlag = TRANSACTION_ERROR_STATUS;
+				return TRANSACTION_ERROR_STATUS;
+			}
+			NETSLog log;
+			log.WriteStringToLog("recv:NACK/no response");
+			log.WriteStringToLog("Data resent:NETSDebit");
+			log.WriteHexToLog(data, length + 1);
+			log.CloseLog();
+			if (m_bRecvFlag == NACK_STATUS)
+				Sleep(2000);
+			dwCountTimer = GetTickCount();
+			m_bRecvFlag = INIT_STATUS;
+			if (!WriteData(data, length + 1))
+			{
+				m_bRecvFlag = TRANSACTION_ERROR_STATUS;
+				return TRANSACTION_ERROR_STATUS;
+			}
+				
+			retrytimes++;
+		}
+		else if (m_bRecvFlag == ACK_STATUS)
+		{
+			NETSLog log;
+			log.WriteStringToLog("recv:ACK");
+			log.CloseLog();
+			retrytimes = 0;
+			m_bRecvFlag = PROCESS_STATUS;
+		}
+		else if (m_bRecvFlag == PROCESS_STATUS)
+		{
+			Sleep(500);
+			looptimes++;
+			if (looptimes >= 240)
+			{
+				strcpy(m_ResponseMsg, "Time out");
+				return TIME_OUT_STATUS;
+			}
+				
+			//if (retrytimes >= 3)
+			//	return TRANSACTION_ERROR_STATUS;
+		}
+		else if (m_bRecvFlag == RESULT_WRONG_LRC)
+		{
+			if (retrytimes < 3)
+			{
+				m_bRecvFlag = PROCESS_STATUS;
+				NETSLog log;
+				log.WriteStringToLog("recv wrong LRC");
+				log.WriteStringToLog("send NACK");
+				log.CloseLog();
+				char NACK = 0x15;
+				WriteData(&NACK, 1);
+				retrytimes++;
+			}
+			if (retrytimes >= 3)
+			{
+				NETSLog log;
+				log.WriteStringToLog("3 times wrong LRC,GetLastApproved.");
+				log.CloseLog();
+				return TIME_OUT_STATUS;
+			}
+		}
+		else if (m_bRecvFlag == TRANSACTION_ERROR_STATUS || m_bRecvFlag == TRANSACTION_COMPLATED_STATUS)
+			return m_bRecvFlag;
+		/*if (m_bRecvFlag == NACK_STATUS && retrytimes > 0)
 		{
 			NETSLog log;
 			log.WriteStringToLog("Data resent:NETSDebit");
 			log.WriteHexToLog(data, length + 1);
 			log.CloseLog();
 			dwCountTimer = GetTickCount();
+			m_bRecvFlag = INIT_STATUS;
 			if (!WriteData(data, length + 1))
 				return TRANSACTION_ERROR_STATUS;
 			retrytimes--;
@@ -1181,6 +1377,7 @@ RECV_STATUS CSerialPort::TransactionNETSDebit(char* ECN, float Amounts)
 			log.WriteHexToLog(data, length + 1);
 			log.CloseLog();
 			dwCountTimer = GetTickCount();
+			m_bRecvFlag = INIT_STATUS;
 			if (!WriteData(data, length + 1))
 				return TRANSACTION_ERROR_STATUS;
 			retrytimes--;
@@ -1201,7 +1398,7 @@ RECV_STATUS CSerialPort::TransactionNETSDebit(char* ECN, float Amounts)
 			log.CloseLog();
 			return NO_RESPONSE_STATUS;
 		}
-		else return m_bRecvFlag;
+		else return m_bRecvFlag;*/
 	}
 	return m_bRecvFlag;
 }
@@ -1259,16 +1456,83 @@ RECV_STATUS CSerialPort::TransactionNETSQRCode(char* ECN, float Amounts)
 	if (!WriteData(data, length + 1))
 		return TRANSACTION_ERROR_STATUS;
 	int looptimes = 0;
-	int retrytimes = 2;
+	int retrytimes = 1;
 	while (1)
 	{
-		if (m_bRecvFlag == NACK_STATUS && retrytimes > 0)
+		if (m_bRecvFlag == NACK_STATUS || m_bRecvFlag == NO_RESPONSE_STATUS)
+		{
+			if (retrytimes >= 3)
+			{
+				strcpy(m_ResponseMsg, "Terminal no response");
+				m_bRecvFlag = TRANSACTION_ERROR_STATUS;
+				return TRANSACTION_ERROR_STATUS;
+			}
+			NETSLog log;
+			log.WriteStringToLog("recv:NACK/no response");
+			log.WriteStringToLog("Data resent:NETSQRCode");
+			log.WriteHexToLog(data, length + 1);
+			log.CloseLog();
+			if (m_bRecvFlag == NACK_STATUS)
+				Sleep(2000);
+			dwCountTimer = GetTickCount();
+			m_bRecvFlag = INIT_STATUS;
+			if (!WriteData(data, length + 1))
+			{
+				m_bRecvFlag = TRANSACTION_ERROR_STATUS;
+				return TRANSACTION_ERROR_STATUS;
+			}
+			retrytimes++;
+		}
+		else if (m_bRecvFlag == ACK_STATUS)
+		{
+			NETSLog log;
+			log.WriteStringToLog("recv:ACK");
+			log.CloseLog();
+			retrytimes = 0;
+			m_bRecvFlag = PROCESS_STATUS;
+		}
+		else if (m_bRecvFlag == PROCESS_STATUS)
+		{
+			Sleep(500);
+			looptimes++;
+			if (looptimes >= 240)
+			{
+				return TIME_OUT_STATUS;
+			}	
+			//if (retrytimes >= 3)
+			//	return TRANSACTION_ERROR_STATUS;
+		}
+		else if (m_bRecvFlag == RESULT_WRONG_LRC)
+		{
+			if (retrytimes < 3)
+			{
+				m_bRecvFlag = PROCESS_STATUS;
+				NETSLog log;
+				log.WriteStringToLog("recv wrong LRC");
+				log.WriteStringToLog("send NACK");
+				log.CloseLog();
+				char NACK = 0x15;
+				WriteData(&NACK, 1);
+				retrytimes++;
+			}
+			if (retrytimes >= 3)
+			{
+				NETSLog log;
+				log.WriteStringToLog("3 times wrong LRC,GetLastApproved.");
+				log.CloseLog();
+				return TIME_OUT_STATUS;
+			}
+		}
+		else if (m_bRecvFlag == TRANSACTION_ERROR_STATUS || m_bRecvFlag == TRANSACTION_COMPLATED_STATUS)
+			return m_bRecvFlag;
+		/*if (m_bRecvFlag == NACK_STATUS && retrytimes > 0)
 		{
 			NETSLog log;
 			log.WriteStringToLog("Data resent:NETSQRCode");
 			log.WriteHexToLog(data, length + 1);
 			log.CloseLog();
 			dwCountTimer = GetTickCount();
+			m_bRecvFlag = INIT_STATUS;
 			if (!WriteData(data, length + 1))
 				return TRANSACTION_ERROR_STATUS;
 			retrytimes--;
@@ -1281,6 +1545,7 @@ RECV_STATUS CSerialPort::TransactionNETSQRCode(char* ECN, float Amounts)
 			log.WriteHexToLog(data, length + 1);
 			log.CloseLog();
 			dwCountTimer = GetTickCount();
+			m_bRecvFlag = INIT_STATUS;
 			if (!WriteData(data, length + 1))
 				return TRANSACTION_ERROR_STATUS;
 			retrytimes--;
@@ -1301,7 +1566,7 @@ RECV_STATUS CSerialPort::TransactionNETSQRCode(char* ECN, float Amounts)
 			log.CloseLog();
 			return NO_RESPONSE_STATUS;
 		}
-		else return m_bRecvFlag;
+		else return m_bRecvFlag;*/
 	}
 	return m_bRecvFlag;
 }
@@ -1338,16 +1603,84 @@ RECV_STATUS CSerialPort::TransactionNETSFlashPay(char* ECN, float Amounts)
 	if (!WriteData(data, length + 1))
 		return TRANSACTION_ERROR_STATUS;
 	int looptimes = 0;
-	int retrytimes = 2;
+	int retrytimes = 1;
 	while (1)
 	{
-		if (m_bRecvFlag == NACK_STATUS && retrytimes > 0)
+		if (m_bRecvFlag == NACK_STATUS || m_bRecvFlag == NO_RESPONSE_STATUS)
+		{
+			
+			if (retrytimes >= 3)
+			{
+				strcpy(m_ResponseMsg, "Terminal no response");
+				m_bRecvFlag = TRANSACTION_ERROR_STATUS;
+				return TRANSACTION_ERROR_STATUS;
+			}
+			NETSLog log;
+			log.WriteStringToLog("recv:NACK/no response");
+			log.WriteStringToLog("Data resent:NETSFlashPay");
+			log.WriteHexToLog(data, length + 1);
+			log.CloseLog();
+			if (m_bRecvFlag == NACK_STATUS)
+				Sleep(2000);
+			dwCountTimer = GetTickCount();
+			m_bRecvFlag = INIT_STATUS;
+			if (!WriteData(data, length + 1))
+			{
+				m_bRecvFlag = TRANSACTION_ERROR_STATUS;
+				return TRANSACTION_ERROR_STATUS;
+			}
+			retrytimes++;
+		}
+		else if (m_bRecvFlag == ACK_STATUS)
+		{
+			NETSLog log;
+			log.WriteStringToLog("recv:ACK");
+			log.CloseLog();
+			retrytimes = 0;
+			m_bRecvFlag = PROCESS_STATUS;
+		}
+		else if (m_bRecvFlag == PROCESS_STATUS)
+		{
+			Sleep(500);
+			looptimes++;
+			if (looptimes >= 120)
+			{
+				return TIME_OUT_STATUS;
+			}
+			//if (retrytimes >= 3)
+			//	return TRANSACTION_ERROR_STATUS;
+		}
+		else if (m_bRecvFlag == RESULT_WRONG_LRC)
+		{
+			if (retrytimes < 3)
+			{
+				m_bRecvFlag = PROCESS_STATUS;
+				NETSLog log;
+				log.WriteStringToLog("recv wrong LRC");
+				log.WriteStringToLog("send NACK");
+				log.CloseLog();
+				char NACK = 0x15;
+				WriteData(&NACK, 1);
+				retrytimes++;
+			}
+			if (retrytimes >= 3)
+			{
+				NETSLog log;
+				log.WriteStringToLog("3 times wrong LRC,GetLastApproved.");
+				log.CloseLog();
+				return TIME_OUT_STATUS;
+			}
+		}
+		else if (m_bRecvFlag == TRANSACTION_ERROR_STATUS || m_bRecvFlag == TRANSACTION_COMPLATED_STATUS)
+			return m_bRecvFlag;
+		/*if (m_bRecvFlag == NACK_STATUS && retrytimes > 0)
 		{
 			NETSLog log;
 			log.WriteStringToLog("Data resent:NETSFlashPay");
 			log.WriteHexToLog(data, length + 1);
 			log.CloseLog();
 			dwCountTimer = GetTickCount();
+			m_bRecvFlag = INIT_STATUS;
 			if (!WriteData(data, length + 1))
 				return TRANSACTION_ERROR_STATUS;
 			retrytimes--;
@@ -1360,6 +1693,7 @@ RECV_STATUS CSerialPort::TransactionNETSFlashPay(char* ECN, float Amounts)
 			log.WriteHexToLog(data, length + 1);
 			log.CloseLog();
 			dwCountTimer = GetTickCount();
+			m_bRecvFlag = INIT_STATUS;
 			if (!WriteData(data, length + 1))
 				return TRANSACTION_ERROR_STATUS;
 			retrytimes--;
@@ -1380,7 +1714,7 @@ RECV_STATUS CSerialPort::TransactionNETSFlashPay(char* ECN, float Amounts)
 			log.CloseLog();
 			return NO_RESPONSE_STATUS;
 		}
-		else return m_bRecvFlag;
+		else return m_bRecvFlag;*/
 	}
 	return m_bRecvFlag;
 }
@@ -1400,16 +1734,86 @@ RECV_STATUS CSerialPort::GetLastApproved(char* ECN)
 	if (!WriteData(data, length + 1))
 		return TRANSACTION_ERROR_STATUS;
 	int looptimes = 0;
-	int retrytimes = 2;
+	int retrytimes = 1;
 	while (1)
 	{
-		if (m_bRecvFlag == NACK_STATUS && retrytimes > 0)
+		if (m_bRecvFlag == NACK_STATUS || m_bRecvFlag == NO_RESPONSE_STATUS)
+		{
+			if (retrytimes >= 3)
+			{
+				strcpy(m_ResponseMsg, "Terminal no response");
+				m_bRecvFlag = TRANSACTION_ERROR_STATUS;
+				return TRANSACTION_ERROR_STATUS;
+			}
+			NETSLog log;
+			log.WriteStringToLog("recv:NACK/no response");
+			log.WriteStringToLog("Data resent:GetLastApproved");
+			log.WriteHexToLog(data, length + 1);
+			log.CloseLog();
+			dwCountTimer = GetTickCount();
+			m_bRecvFlag = INIT_STATUS;
+			if (!WriteData(data, length + 1))
+			{
+				m_bRecvFlag = TRANSACTION_ERROR_STATUS;
+				return TRANSACTION_ERROR_STATUS;
+			}	
+			retrytimes++;
+		}
+		else if (m_bRecvFlag == ACK_STATUS)
+		{
+			NETSLog log;
+			log.WriteStringToLog("recv:ACK");
+			log.CloseLog();
+			retrytimes = 0;
+			m_bRecvFlag = PROCESS_STATUS;
+		}
+		else if (m_bRecvFlag == PROCESS_STATUS)
+		{
+			Sleep(500);
+			looptimes++;
+			if (looptimes >= 60)
+			{
+				strcpy(m_ResponseMsg, "Declined Transaction");
+				m_bRecvFlag = TRANSACTION_ERROR_STATUS;
+				return TRANSACTION_ERROR_STATUS;
+			}
+				
+			//if (retrytimes >= 3)
+			//	return TRANSACTION_ERROR_STATUS;
+		}
+		else if (m_bRecvFlag == RESULT_WRONG_LRC)
+		{
+			if (retrytimes < 3)
+			{
+				m_bRecvFlag = PROCESS_STATUS;
+				NETSLog log;
+				log.WriteStringToLog("recv wrong LRC");
+				log.WriteStringToLog("send NACK");
+				log.CloseLog();
+				char NACK = 0x15;
+				WriteData(&NACK, 1);
+				retrytimes++;
+			}
+			if (retrytimes >= 3)
+			{
+				NETSLog log;
+				log.WriteStringToLog("3 times wrong LRC.");
+				log.CloseLog();
+				strcpy(m_ResponseMsg, "Declined Transaction");
+				m_bRecvFlag = TRANSACTION_ERROR_STATUS;
+				return TRANSACTION_ERROR_STATUS;
+			}
+		}
+		else if (m_bRecvFlag == TRANSACTION_ERROR_STATUS || m_bRecvFlag == TRANSACTION_COMPLATED_STATUS)
+			return m_bRecvFlag;
+		/*if (m_bRecvFlag == NACK_STATUS && retrytimes > 0)
 		{
 			NETSLog log;
 			log.WriteStringToLog("Data resent:GetLastApproved");
 			log.WriteHexToLog(data, length + 1);
 			log.CloseLog();
 			dwCountTimer = GetTickCount();
+			m_bRecvFlag = INIT_STATUS;
 			if (!WriteData(data, length + 1))
 				return TRANSACTION_ERROR_STATUS;
 			retrytimes--;
@@ -1422,6 +1826,7 @@ RECV_STATUS CSerialPort::GetLastApproved(char* ECN)
 			log.WriteHexToLog(data, length + 1);
 			log.CloseLog();
 			dwCountTimer = GetTickCount();
+			m_bRecvFlag = INIT_STATUS;
 			if (!WriteData(data, length + 1))
 				return TRANSACTION_ERROR_STATUS;
 			retrytimes--;
@@ -1442,7 +1847,7 @@ RECV_STATUS CSerialPort::GetLastApproved(char* ECN)
 			log.CloseLog();
 			return NO_RESPONSE_STATUS;
 		}
-		else return m_bRecvFlag;
+		else return m_bRecvFlag;*/
 	}
 	return m_bRecvFlag;
 }

@@ -95,9 +95,6 @@ BOOL CHomeContainerCtrl::OnMouseDown(int nButton, const CBCGPPoint& pt)
 			{
 				//CTipInfo::c_pTip->ShowFloatWindow(this);
 				//::PostMessage(AfxGetMainWnd()->m_hWnd, ID_SHOWTOOLTIP, IDS_TIP_MAX_TOPPING, 0);
-				CVoucherList* voucher = new CVoucherList();
-				voucher->Create(IDD_DIALOG_VOUCHERS);
-				voucher->ShowWindow(SW_SHOWNORMAL);
 			}
 			else if (pImage->GetID() == ID_IMAGE_ORDER)
 			{

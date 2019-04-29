@@ -30,4 +30,5 @@ public:
 	afx_msg HBRUSH OnCtlColor(CDC* pDC, CWnd* pWnd, UINT nCtlColor);
 	CBitmapBtn m_BtnPay;
 	afx_msg void OnClose();
+	virtual void PostNcDestroy();
 };
